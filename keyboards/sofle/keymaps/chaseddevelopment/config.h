@@ -33,7 +33,7 @@
 
 // Use the pandakb/vial font glyphs for layer/mod icons
 #ifndef OLED_FONT_H
-#    define OLED_FONT_H "QMK-firmware-for-keyboards/sofle/sofle/lib/glcdfont.c"
+#    define OLED_FONT_H "users/chaseddevelopment/oled/fonts/glcdfont.c"
 #endif
 
 #define CUSTOM_LAYER_READ //if you remove this it causes issues - needs better guarding

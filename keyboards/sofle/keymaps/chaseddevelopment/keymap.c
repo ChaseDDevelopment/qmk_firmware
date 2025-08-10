@@ -249,6 +249,7 @@ void keyboard_post_init_user(void) {
 #endif
 
 #ifdef OLED_ENABLE
+#include "users/chaseddevelopment/oled/oled.h"
 
 
 
@@ -277,7 +278,8 @@ bool isJumping  = false;
 bool showedJump = true;
 
 /* logic */
-static void render_luna(int LUNA_X, int LUNA_Y) {
+// migrated to userspace
+/* static void render_luna(int LUNA_X, int LUNA_Y) {
     /* Sit */
     static const char PROGMEM sit[2][ANIM_SIZE] = {/* 'sit1', 32x22px */
                                                    {
@@ -390,7 +392,7 @@ static void render_luna(int LUNA_X, int LUNA_Y) {
         anim_timer = timer_read32();
         animate_luna();
     }
-}
+} */
 
 /* KEYBOARD PET END */
 
@@ -593,7 +595,7 @@ static void render_right_oled(void) {
 
     // Luna at the top (pages 0..2)
     oled_set_cursor(0, 1);
-    render_luna(0, 1);
+    // userspace handles luna rendering
 
     // WPM compact readout
     oled_set_cursor(0, 3);
@@ -638,19 +640,9 @@ static void render_left_oled(void) {
 
 // removed old text-based status rendering
 
-oled_rotation_t oled_init_user(oled_rotation_t rotation) {
-    (void)rotation;
-    return OLED_ROTATION_270;
-}
+oled_rotation_t oled_init_user(oled_rotation_t rotation) { return chased_oled_init(rotation); }
 
-bool oled_task_user(void) {
-    if (is_keyboard_master()) {
-        render_left_oled();
-    } else {
-        render_right_oled();
-    }
-    return false;
-}
+bool oled_task_user(void) { return oled_task_user_wrapped(); }
 
 #endif
 

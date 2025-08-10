@@ -7,3 +7,6 @@ LTO_ENABLE = yes
 OLED_ENABLE = yes
 TRI_LAYER_ENABLE = no
 WPM_ENABLE = yes
+
+# Include userspace
+USER_NAME := chaseddevelopment
