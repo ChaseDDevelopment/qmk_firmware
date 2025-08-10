@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(qmk clean:*)",
+      "Bash(qmk compile:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:git.yarmo.eu)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:api.github.com)"
+    ],
+    "deny": []
+  }
+}
