@@ -26,6 +26,16 @@
 
 #define CUSTOM_FONT
 
+// OLED: explicit panel size and font with pandakb/vial glyphs
+#ifndef OLED_DISPLAY_128X32
+#    define OLED_DISPLAY_128X32
+#endif
+
+// Use the pandakb/vial font glyphs for layer/mod icons
+#ifndef OLED_FONT_H
+#    define OLED_FONT_H "QMK-firmware-for-keyboards/sofle/sofle/lib/glcdfont.c"
+#endif
+
 #define CUSTOM_LAYER_READ //if you remove this it causes issues - needs better guarding
 
 
