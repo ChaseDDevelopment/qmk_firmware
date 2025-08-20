@@ -129,7 +129,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [_RAISE] = LAYOUT_split_3x6_3(
   KC_TAB,   KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                   KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_BSPC,
-  KC_LCTL,  KC_INS,  KC_PSCR, KC_APP,  C(KC_A), KC_CAPS,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_HOME, KC_END,
+  KC_LCTL,  KC_INS,  KC_PSCR, KC_APP,  C(KC_A), XXXXXXX,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_HOME, KC_END,
   KC_LSFT,  C(KC_Z), C(KC_X), C(KC_C), C(KC_V), XXXXXXX,                   KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, KC_DEL,  TG(_GAMING),
                               KC_LALT, _______, KC_ENT,       KC_SPC, _______, KC_RGUI
 ),
@@ -173,14 +173,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /* RAISE_MAC - macOS raise layer with Cmd-based shortcuts */
 [_RAISE_MAC] = LAYOUT_split_3x6_3(
   KC_TAB,   KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                   KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_BSPC,
-  KC_LALT,  KC_INS,  KC_PSCR, KC_APP,  G(KC_A), KC_CAPS,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_GRV,  KC_TILD,
+  KC_LALT,  KC_INS,  KC_PSCR, KC_APP,  G(KC_A), XXXXXXX,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_GRV,  KC_TILD,
   KC_LSFT,  G(KC_Z), G(KC_X), G(KC_C), G(KC_V), C(S(KC_C)),                KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, KC_DEL,  C(S(KC_V)),
                               KC_LGUI, _______, KC_ENT,       KC_SPC, _______, KC_RCTL
 ),
 
 /* ADJUST - Settings layer (LOWER + RAISE) */
 [_ADJUST] = LAYOUT_split_3x6_3(
-  QK_BOOT,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+  QK_BOOT,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   KC_MPRV, KC_MPLY, KC_MNXT, KC_VOLD, KC_VOLU, KC_MUTE,
   RGB_TOG,  RGB_HUI, RGB_SAI, RGB_VAI, RGB_SPI, RGB_MOD,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, OS_TOG,
   RGB_RMOD, RGB_HUD, RGB_SAD, RGB_VAD, RGB_SPD, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
                               _______, _______, _______,       _______, _______, _______

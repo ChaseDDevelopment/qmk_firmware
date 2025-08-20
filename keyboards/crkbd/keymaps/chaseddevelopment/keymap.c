@@ -286,22 +286,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         case KC_RAISE:
-            if (record->event.pressed) {
-                layer_on(_RAISE);
-            } else {
-                layer_off(_RAISE);
-            }
-            return false;
-        case KC_D_MUTE:
-            if (record->event.pressed) {
-                register_mods(mod_config(MOD_MEH));
-                register_code(KC_UP);
-            } else {
-                unregister_mods(mod_config(MOD_MEH));
-                unregister_code(KC_UP);
-            }
-            break;
-        case KC_GRV_INV:
+            if (record->event.pressed) {SO        case KC_GRV_INV:
             if (record->event.pressed) {
                 if (get_mods() & MOD_MASK_SHIFT) {
                     del_mods(MOD_MASK_SHIFT);
