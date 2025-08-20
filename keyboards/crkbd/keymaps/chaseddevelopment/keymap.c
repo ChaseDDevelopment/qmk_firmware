@@ -56,7 +56,8 @@ enum custom_keycodes {
     KC_LOWER = SAFE_RANGE,
     KC_RAISE,
     KC_ADJUST,
-    KC_D_MUTE
+    KC_D_MUTE,
+    KC_GRV_INV
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -76,7 +77,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_BSPC,
   KC_ESC,   KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN,  KC_QUOT,
   KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  KC_RSFT,
-                              KC_LGUI, KC_LOWER, KC_ENT,      KC_SPC, KC_RAISE, KC_RALT
+                              KC_LCTL, KC_LOWER, KC_ENT,      KC_SPC, KC_RAISE, KC_RCTL
 ),
 /* LOWER
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -90,10 +91,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                                     `--------------------'      `--------------------'
  */
 [_LOWER] = LAYOUT_split_3x6_3(
-  KC_GRV,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                      KC_6,    KC_7,    KC_8,    KC_9,    KC_0,   KC_F12,
+  KC_GRV_INV,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                      KC_6,    KC_7,    KC_8,    KC_9,    KC_0,   KC_F12,
   KC_LCTL,  KC_F1,  KC_F2,   KC_F3,   KC_F4,   KC_F5,                     KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_HOME, KC_END,
   KC_LSFT,  KC_F6,  KC_F7,   KC_F8,   KC_F9,   KC_F10,                    KC_LCBR, KC_RCBR, KC_LBRC, KC_RBRC, KC_PGUP, KC_PGDN,
-                              KC_LGUI, KC_LOWER, KC_ENT,       KC_SPC, KC_RAISE, KC_RALT
+                              KC_LALT, _______, KC_ENT,       KC_SPC, _______, KC_RGUI
 ),
 /* RAISE
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -108,9 +109,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [_RAISE] = LAYOUT_split_3x6_3(
   KC_TAB,   KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                   KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_BSPC,
-  KC_LCTL,  KC_INS,  KC_PSCR, KC_APP,  XXXXXXX, KC_CAPS,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_GRV,  KC_TILD,
+  KC_LCTL,  KC_INS,  KC_PSCR, KC_APP,  XXXXXXX, KC_CAPS,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_HOME, KC_END,
   KC_LSFT,  C(KC_Z), C(KC_X), C(KC_C), C(KC_V), XXXXXXX,                   KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, KC_DEL,  TG(_GAMING),
-                              KC_LGUI, KC_LOWER, KC_ENT,       KC_SPC, KC_RAISE, KC_RALT
+                              KC_LALT, _______, KC_ENT,       KC_SPC, _______, KC_RGUI
 ),
 
 /* GAMING
@@ -147,19 +148,27 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         uint8_t r = rgb_matrix_layer_colors[layer][0];
         uint8_t g = rgb_matrix_layer_colors[layer][1]; 
         uint8_t b = rgb_matrix_layer_colors[layer][2];
-        
-        // Light up outer columns and thumb clusters for layer indication
         for (uint8_t i = led_min; i < led_max; i++) {
-            switch (i) {
-                case 0: case 6: case 12: case 18:  // Left outer column + thumb
-                case 21: case 27: case 33: case 39: // Right outer column + thumb
-                    rgb_matrix_set_color(i, r, g, b);
-                    break;
-            }
+            rgb_matrix_set_color(i, r, g, b);
+        }
+    } else {
+        // Base layer: solid cyan/blue
+        HSV hsv = { .h = 175, .s = 255, .v = 120 };
+        RGB rgb = hsv_to_rgb(hsv);
+        for (uint8_t i = led_min; i < led_max; i++) {
+            rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
         }
     }
     return false;
 }
+
+#ifdef RGB_MATRIX_ENABLE
+void keyboard_post_init_user(void) {
+    // Force solid color on boot, overriding any stored gradient in EEPROM
+    rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
+    rgb_matrix_sethsv_noeeprom(175, 255, 120);
+}
+#endif
 #endif
 
 #ifdef OLED_ENABLE
@@ -292,6 +301,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 unregister_code(KC_UP);
             }
             break;
+        case KC_GRV_INV:
+            if (record->event.pressed) {
+                if (get_mods() & MOD_MASK_SHIFT) {
+                    del_mods(MOD_MASK_SHIFT);
+                    tap_code16(KC_GRV);
+                    add_mods(MOD_MASK_SHIFT);
+                } else {
+                    tap_code16(S(KC_GRV));
+                }
+            }
+            return false;
         case KC_LCTL:
         case KC_RCTL:
             chased_oled_on_ctrl(record->event.pressed);

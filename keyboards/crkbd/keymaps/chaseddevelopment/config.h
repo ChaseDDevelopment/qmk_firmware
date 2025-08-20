@@ -49,7 +49,11 @@
     #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 120  // limits maximum brightness (was 150 in Sofle)
     
     // Default mode
-    #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_GRADIENT_LEFT_RIGHT
+    #undef RGB_MATRIX_DEFAULT_MODE
+    #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
+    #define RGB_MATRIX_DEFAULT_HUE 175   // cyan-blue range
+    #define RGB_MATRIX_DEFAULT_SAT 255
+    #define RGB_MATRIX_DEFAULT_VAL 120
     
     // Step sizes for RGB adjustments
     #define RGB_MATRIX_HUE_STEP 8

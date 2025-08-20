@@ -50,13 +50,57 @@ static void render_master_mods_view(void) {
     chased_render_caps_dot_if_any(CHASED_OLED_ROWS - 1);
 }
 
+static bool s_rgb_dimmed = false;
+
 void chased_oled_task_master(void) {
+    // Honor OLED timeout on master explicitly, and sync RGB Matrix state
+    #if OLED_TIMEOUT > 0
+    if (last_input_activity_elapsed() > OLED_TIMEOUT && last_led_activity_elapsed() > OLED_TIMEOUT) {
+        #ifdef RGB_MATRIX_ENABLE
+        if (!s_rgb_dimmed) {
+            rgb_matrix_disable_noeeprom();
+            s_rgb_dimmed = true;
+        }
+        #endif
+        oled_off();
+        return;
+    } else {
+        #ifdef RGB_MATRIX_ENABLE
+        if (s_rgb_dimmed) {
+            rgb_matrix_enable_noeeprom();
+            s_rgb_dimmed = false;
+        }
+        #endif
+        oled_on();
+    }
+    #endif
     // Render both layer indicator and modifiers without view swapping to avoid flashing
     render_master_layer_view();
     render_master_mods_view();
 }
 
 void chased_oled_task_slave(void) {
+    // Honor OLED timeout on slave explicitly, and sync RGB Matrix state
+    #if OLED_TIMEOUT > 0
+    if (last_input_activity_elapsed() > OLED_TIMEOUT && last_led_activity_elapsed() > OLED_TIMEOUT) {
+        #ifdef RGB_MATRIX_ENABLE
+        if (!s_rgb_dimmed) {
+            rgb_matrix_disable_noeeprom();
+            s_rgb_dimmed = true;
+        }
+        #endif
+        oled_off();
+        return;
+    } else {
+        #ifdef RGB_MATRIX_ENABLE
+        if (s_rgb_dimmed) {
+            rgb_matrix_enable_noeeprom();
+            s_rgb_dimmed = false;
+        }
+        #endif
+        oled_on();
+    }
+    #endif
     if (CHASED_OLED_PET_ON_SLAVE) {
         oled_set_cursor(0, 0);
         chased_render_luna(0, 0);

@@ -60,8 +60,12 @@
     #define ENABLE_RGB_MATRIX_RAINBOW_PINWHEELS
     #define ENABLE_RGB_MATRIX_RAINDROPS
     
-    // Default mode - Rainbow gradient
-    #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_GRADIENT_LEFT_RIGHT
+    // Default mode - Solid color tuned for Tokyo Night-esque cyan/blue
+    #undef RGB_MATRIX_DEFAULT_MODE
+    #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
+    #define RGB_MATRIX_DEFAULT_HUE 175
+    #define RGB_MATRIX_DEFAULT_SAT 255
+    #define RGB_MATRIX_DEFAULT_VAL 120
     
     // Step sizes for RGB adjustments
     #define RGB_MATRIX_HUE_STEP 8

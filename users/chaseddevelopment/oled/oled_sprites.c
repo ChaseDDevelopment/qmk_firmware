@@ -43,12 +43,13 @@ static void write_layer_glyphs_adjust(void) {
 }
 
 void chased_render_layer_block(void) {
-    if (layer_state_is(3)) {
+    uint8_t highest = get_highest_layer(layer_state);
+    if (highest == 3 || highest == 7) { // _GAMING or _ADJUST on rev1
         write_layer_glyphs_adjust();
-    } else if (layer_state_is(2)) {
-        write_layer_glyphs_lower();
-    } else if (layer_state_is(1)) {
+    } else if (highest == 2 || highest == 6) { // _RAISE or _RAISE_MAC
         write_layer_glyphs_raise();
+    } else if (highest == 1 || highest == 5) { // _LOWER or _LOWER_MAC
+        write_layer_glyphs_lower();
     } else {
         write_layer_glyphs_default();
     }
