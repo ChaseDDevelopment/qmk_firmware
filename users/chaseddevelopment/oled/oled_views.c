@@ -23,8 +23,7 @@ void chased_render_wpm_bar_line(uint8_t line, uint8_t start_col, uint8_t width);
 void chased_render_caps_dot_if_any(uint8_t line);
 void chased_render_gamepad_badge_small(void);
 
-static uint32_t s_view_timer = 0;
-static bool     s_show_layer_view = true;
+/* view swap state removed to prevent flashing */
 
 __attribute__((weak)) bool chased_is_game_layer_active(void) {
     return false;
@@ -44,23 +43,17 @@ static void render_master_layer_view(void) {
 
 static void render_master_mods_view(void) {
     uint8_t mods = get_mods() | get_oneshot_mods();
-    oled_set_cursor(0, 1);
+    // Move mods further down to avoid overlap with the three-line layer block (OLED_ROTATION_270)
+    oled_set_cursor(0, 7);
     chased_render_mods(mods);
     oled_set_cursor(0, CHASED_OLED_ROWS - 1);
     chased_render_caps_dot_if_any(CHASED_OLED_ROWS - 1);
 }
 
 void chased_oled_task_master(void) {
-    if (timer_elapsed32(s_view_timer) > CHASED_OLED_VIEW_SWAP_INTERVAL_MS) {
-        s_view_timer       = timer_read32();
-        s_show_layer_view  = !s_show_layer_view;
-    }
-
-    if (s_show_layer_view) {
-        render_master_layer_view();
-    } else {
-        render_master_mods_view();
-    }
+    // Render both layer indicator and modifiers without view swapping to avoid flashing
+    render_master_layer_view();
+    render_master_mods_view();
 }
 
 void chased_oled_task_slave(void) {

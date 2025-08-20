@@ -163,33 +163,10 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 #endif
 
 #ifdef OLED_ENABLE
+#include "users/chaseddevelopment/oled/oled.h"
 
-/* KEYBOARD PET START */
-
-/* settings */
-#define MIN_WALK_SPEED      10
-#define MIN_RUN_SPEED       40
-
-/* advanced settings */
-#define ANIM_FRAME_DURATION 200  // how long each frame lasts in ms
-#define ANIM_SIZE           96   // number of bytes in array
-
-/* timers */
-uint32_t anim_timer = 0;
-
-/* current frame */
-uint8_t current_frame = 0;
-
-/* status variables */
-int   current_wpm = 0;
-led_t led_usb_state;
-
-bool isSneaking = false;
-bool isJumping  = false;
-bool showedJump = true;
-
-/* logic */
-static void render_luna(int LUNA_X, int LUNA_Y) {
+/* legacy luna assets removed in favor of userspace */
+/* static void render_luna(int LUNA_X, int LUNA_Y) {
     /* Sit */
     static const char PROGMEM sit[2][ANIM_SIZE] = {/* 'sit1', 32x22px */
                                                    {
@@ -278,67 +255,15 @@ static void render_luna(int LUNA_X, int LUNA_Y) {
         anim_timer = timer_read32();
         animate_luna();
     }
-}
+} */
 
-static void print_logo_narrow(void) {
-    render_luna(0, 5);
-    /* wpm counter */
-    current_wpm = get_current_wpm();
-    oled_set_cursor(0, 13);
-    oled_write_P(PSTR("wpm: "), false);
-    oled_write(get_u8_str(current_wpm, ' '), false);
-}
+/* static void print_logo_narrow(void) { } */
 
-static void print_status_narrow(void) {
-    oled_write_P(PSTR("\n\n"), false);
-    oled_write_ln_P(PSTR(""), false);
+/* static void print_status_narrow(void) { } */
 
-    switch (get_highest_layer(default_layer_state)) {
-        case _QWERTY:
-            oled_write_ln_P(PSTR("Qwrt"), false);
-            break;
-        default:
-            oled_write_ln_P(PSTR("Undef"), false);
-    }
-    oled_write_P(PSTR("\n\n"), false);
-    // Print current layer
-    oled_write_ln_P(PSTR("LAYER"), false);
-    switch (get_highest_layer(layer_state)) {
-        case _QWERTY:
-            oled_write_P(PSTR("Base\n"), false);
-            break;
-        case _RAISE:
-            oled_write_P(PSTR("Raise"), false);
-            break;
-        case _LOWER:
-            oled_write_P(PSTR("Lower"), false);
-            break;
-        case _GAMING:
-            oled_write_P(PSTR("Game\n"), false);
-            break;
-        default:
-            oled_write_ln_P(PSTR("Undef"), false);
-    }
-}
+oled_rotation_t oled_init_user(oled_rotation_t rotation) { return chased_oled_init(rotation); }
 
-oled_rotation_t oled_init_user(oled_rotation_t rotation) {
-    if (is_keyboard_master()) {
-        return OLED_ROTATION_270;
-    } else {
-        return OLED_ROTATION_270;
-    }
-    return rotation;
-}
-
-bool oled_task_user(void) {
-    current_wpm = get_current_wpm();
-    if (is_keyboard_master()) {
-        print_status_narrow();
-    } else {
-        print_logo_narrow();
-    }
-    return false;
-}
+bool oled_task_user(void) { return oled_task_user_wrapped(); }
 
 #endif
 
@@ -369,19 +294,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             break;
         case KC_LCTL:
         case KC_RCTL:
-            if (record->event.pressed) {
-                isSneaking = true;
-            } else {
-                isSneaking = false;
-            }
+            chased_oled_on_ctrl(record->event.pressed);
             break;
         case KC_SPC:
-            if (record->event.pressed) {
-                isJumping = true;
-                showedJump = false;
-            } else {
-                isJumping = false;
-            }
+            chased_oled_on_space(record->event.pressed);
             break;
     }
     return true;

@@ -64,27 +64,17 @@ Shift Z X  C  V  B        N  M  ,  .  /  Shift
 
 ## Building & Flashing
 
-### For RP2040-Converted Corne v3 (Recommended)
+### For Pro Micro footprint Corne (rev1-style) + RP2040-CE (Recommended)
 ```bash
-# Compile the firmware for r2g variant (54 LEDs, RP2040-converted v3)
-qmk compile -kb crkbd/r2g -km chaseddevelopment
-
-# Flash to keyboard
-qmk flash -kb crkbd/r2g -km chaseddevelopment
-```
-
-### For Standard Corne v1/v2
-```bash
-# Compile the firmware for original Corne variants
-qmk compile -kb crkbd/rev1 -km chaseddevelopment
+# Compile the firmware using RP2040-CE conversion
+qmk compile -kb crkbd/rev1 -km chaseddevelopment -e CONVERT_TO=rp2040_ce
 
 # Flash to keyboard  
-qmk flash -kb crkbd/rev1 -km chaseddevelopment
+qmk flash -kb crkbd/rev1 -km chaseddevelopment -e CONVERT_TO=rp2040_ce
 ```
 
 ### Hardware Compatibility
-- **r2g variant**: RP2040-converted Corne v3 with ATmega32u4 pinout (54 LEDs total)
-- **rev1 variant**: Original Corne with ATmega32u4 (54 LEDs total)  
+- **rev1-style (Pro Micro footprint)**: 54 LEDs (27 per side). Use `-e CONVERT_TO=rp2040_ce` for RP2040-CE
 - **rev4_0/rev4_1**: Newer RP2040 Corne v4 (46 LEDs - requires different LED configuration)
 
 ## Customization
@@ -130,9 +120,9 @@ If using an encoder-equipped Corne:
 - Verify RGB_MATRIX_ENABLE in rules.mk  
 - Check that RGBLIGHT_ENABLE is set to 'no'
 - Confirm RGB Matrix LED count matches your Corne variant:
-  - r2g/rev1: 54 LEDs (27 per side)
+  - rev1-style: 54 LEDs (27 per side)
   - rev4_0/rev4_1: 46 LEDs (23 per side)
-- Use correct build target for your hardware variant
+- Use correct build target and/or conversion flag for your hardware
 
 **OLED Issues:**
 - Verify OLED_ENABLE in rules.mk

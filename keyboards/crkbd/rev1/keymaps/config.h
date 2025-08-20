@@ -31,9 +31,9 @@
     #define TAPPING_TERM 200
 #endif
 
-// RGB Matrix configuration (Corne r2g variant: 54 LEDs total, 27 per side)
+// RGB Matrix configuration (Corne rev1-style: 54 LEDs total, 27 per side)
 #ifdef RGB_MATRIX_ENABLE
-    #define RGB_MATRIX_LED_COUNT 54            // Total LEDs (27 per side for r2g variant)
+    #define RGB_MATRIX_LED_COUNT 54            // Total LEDs (27 per side)
     #define RGB_MATRIX_KEYPRESSES              // reacts to keypresses
     #define RGB_MATRIX_SLEEP                   // turn off effects when suspended
     #define RGB_MATRIX_FRAMEBUFFER_EFFECTS
@@ -84,7 +84,7 @@
     #define ENCODER_DIRECTION_FLIP
 #endif
 
-// RP2040-converted Corne v3 optimizations (r2g variant)
+// Split sync optimizations for Corne
 #define SPLIT_LAYER_STATE_ENABLE               // Sync layer state between halves
 #define SPLIT_LED_STATE_ENABLE                 // Sync LED state between halves
 #define SPLIT_MODS_ENABLE                      // Sync modifiers between halves
