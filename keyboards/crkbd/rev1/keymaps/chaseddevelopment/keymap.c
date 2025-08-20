@@ -67,6 +67,13 @@ enum os_modes {
 
 uint8_t current_os = OS_WINDOWS_LINUX;
 
+// Internal guard to allow firmware to clear Caps Lock while blocking all other sources
+static bool allow_caps_toggle_internal = false;
+static bool caps_seen_on = false;
+static bool physical_lshift_down = false;
+static bool physical_rshift_down = false;
+static uint32_t shift_stuck_since = 0;
+
 enum custom_keycodes {
     KC_LOWER = SAFE_RANGE,
     KC_RAISE,
@@ -304,20 +311,37 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 unregister_code(KC_UP);
             }
             break;
+        case KC_CAPS:
+            // Block Caps from any source unless explicitly allowed by firmware
+            if (!allow_caps_toggle_internal) {
+                return false;
+            }
+            break;
         case KC_GRV_INV:
             if (record->event.pressed) {
-                if (get_mods() & MOD_MASK_SHIFT) {
-                    del_mods(MOD_MASK_SHIFT);
-                    tap_code16(KC_GRV); // produce backtick when Shift held
-                    add_mods(MOD_MASK_SHIFT);
+                uint8_t saved_mods = get_mods();
+                uint8_t saved_oneshot = get_oneshot_mods();
+                clear_oneshot_mods();
+                del_mods(MOD_MASK_SHIFT);
+                if ((saved_mods | saved_oneshot) & MOD_MASK_SHIFT) {
+                    tap_code(KC_GRV); // backtick when Shift was held/oneshot
                 } else {
-                    tap_code16(S(KC_GRV)); // produce tilde when no Shift
+                    tap_code16(S(KC_GRV)); // tilde when no Shift
                 }
+                set_mods(saved_mods);
+                set_oneshot_mods(saved_oneshot);
+                send_keyboard_report();
             }
             return false;
         case KC_LCTL:
         case KC_RCTL:
             chased_oled_on_ctrl(record->event.pressed);
+            break;
+        case KC_LSFT:
+            physical_lshift_down = record->event.pressed;
+            break;
+        case KC_RSFT:
+            physical_rshift_down = record->event.pressed;
             break;
         case KC_SPC:
             chased_oled_on_space(record->event.pressed);
@@ -326,5 +350,48 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     
     // Copy/paste OLED feedback removed; handled by userspace if desired
     
+    return true;
+}
+
+void matrix_scan_user(void) {
+    // Clear Caps once per activation to avoid rapid re-toggle loops
+    bool is_on = host_keyboard_led_state().caps_lock;
+    if (is_on && !caps_seen_on) {
+        allow_caps_toggle_internal = true;
+        tap_code(KC_CAPS);
+        allow_caps_toggle_internal = false;
+        caps_seen_on = true;
+    } else if (!is_on) {
+        caps_seen_on = false;
+    }
+
+    // Anti-stuck Shift: if Shift mod is active with no physical Shift key held, clear it after debounce
+    bool shift_mod_active = (get_mods() & MOD_MASK_SHIFT) != 0;
+    bool any_physical_shift = physical_lshift_down || physical_rshift_down;
+    if (shift_mod_active && !any_physical_shift) {
+        if (shift_stuck_since == 0) {
+            shift_stuck_since = timer_read32();
+        } else if (timer_elapsed32(shift_stuck_since) > 150) {
+            del_mods(MOD_MASK_SHIFT);
+            send_keyboard_report();
+            shift_stuck_since = 0;
+        }
+    } else {
+        shift_stuck_since = 0;
+    }
+}
+
+bool led_update_user(led_t led_state) {
+    // Cancel Caps immediately when host tries to enable it
+    if (led_state.caps_lock && !caps_seen_on) {
+        allow_caps_toggle_internal = true;
+        tap_code(KC_CAPS);
+        allow_caps_toggle_internal = false;
+        caps_seen_on = true;
+        return false; // suppress propagating Caps state
+    }
+    if (!led_state.caps_lock) {
+        caps_seen_on = false;
+    }
     return true;
 }

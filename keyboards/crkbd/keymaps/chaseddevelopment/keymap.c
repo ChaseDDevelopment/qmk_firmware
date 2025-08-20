@@ -60,6 +60,13 @@ enum custom_keycodes {
     KC_GRV_INV
 };
 
+// Internal guard to allow firmware to clear Caps while blocking external Caps
+static bool allow_caps_toggle_internal = false;
+static bool caps_seen_on = false;
+static bool physical_lshift_down = false;
+static bool physical_rshift_down = false;
+static uint32_t shift_stuck_since = 0;
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*
  * QWERTY (Base Layer) - Corne Layout
@@ -109,7 +116,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [_RAISE] = LAYOUT_split_3x6_3(
   KC_TAB,   KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                   KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_BSPC,
-  KC_LCTL,  KC_INS,  KC_PSCR, KC_APP,  XXXXXXX, KC_CAPS,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_HOME, KC_END,
+  KC_LCTL,  KC_INS,  KC_PSCR, KC_APP,  XXXXXXX, XXXXXXX,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_HOME, KC_END,
   KC_LSFT,  C(KC_Z), C(KC_X), C(KC_C), C(KC_V), XXXXXXX,                   KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, KC_DEL,  TG(_GAMING),
                               KC_LALT, _______, KC_ENT,       KC_SPC, _______, KC_RGUI
 ),
@@ -286,24 +293,89 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         case KC_RAISE:
-            if (record->event.pressed) {SO        case KC_GRV_INV:
             if (record->event.pressed) {
-                if (get_mods() & MOD_MASK_SHIFT) {
-                    del_mods(MOD_MASK_SHIFT);
-                    tap_code16(KC_GRV);
-                    add_mods(MOD_MASK_SHIFT);
+                layer_on(_RAISE);
+            } else {
+                layer_off(_RAISE);
+            }
+            return false;
+        case KC_CAPS:
+            if (!allow_caps_toggle_internal) {
+                return false;
+            }
+            break;
+        case KC_GRV_INV:
+            if (record->event.pressed) {
+                uint8_t saved_mods = get_mods();
+                uint8_t saved_oneshot = get_oneshot_mods();
+                clear_oneshot_mods();
+                del_mods(MOD_MASK_SHIFT);
+                if ((saved_mods | saved_oneshot) & MOD_MASK_SHIFT) {
+                    tap_code(KC_GRV);
                 } else {
                     tap_code16(S(KC_GRV));
                 }
+                set_mods(saved_mods);
+                set_oneshot_mods(saved_oneshot);
+                send_keyboard_report();
             }
             return false;
         case KC_LCTL:
         case KC_RCTL:
             chased_oled_on_ctrl(record->event.pressed);
             break;
+        case KC_LSFT:
+            physical_lshift_down = record->event.pressed;
+            break;
+        case KC_RSFT:
+            physical_rshift_down = record->event.pressed;
+            break;
         case KC_SPC:
             chased_oled_on_space(record->event.pressed);
             break;
+    }
+    return true;
+}
+
+void matrix_scan_user(void) {
+    // Clear Caps once per activation to avoid rapid re-toggle loops
+    bool is_on = host_keyboard_led_state().caps_lock;
+    if (is_on && !caps_seen_on) {
+        allow_caps_toggle_internal = true;
+        tap_code(KC_CAPS);
+        allow_caps_toggle_internal = false;
+        caps_seen_on = true;
+    } else if (!is_on) {
+        caps_seen_on = false;
+    }
+
+    // Anti-stuck Shift: if Shift mod is active with no physical Shift key held, clear it after debounce
+    bool shift_mod_active = (get_mods() & MOD_MASK_SHIFT) != 0;
+    bool any_physical_shift = physical_lshift_down || physical_rshift_down;
+    if (shift_mod_active && !any_physical_shift) {
+        if (shift_stuck_since == 0) {
+            shift_stuck_since = timer_read32();
+        } else if (timer_elapsed32(shift_stuck_since) > 150) {
+            del_mods(MOD_MASK_SHIFT);
+            send_keyboard_report();
+            shift_stuck_since = 0;
+        }
+    } else {
+        shift_stuck_since = 0;
+    }
+}
+
+bool led_update_user(led_t led_state) {
+    // Cancel Caps immediately when host tries to enable it
+    if (led_state.caps_lock && !caps_seen_on) {
+        allow_caps_toggle_internal = true;
+        tap_code(KC_CAPS);
+        allow_caps_toggle_internal = false;
+        caps_seen_on = true;
+        return false;
+    }
+    if (!led_state.caps_lock) {
+        caps_seen_on = false;
     }
     return true;
 }
