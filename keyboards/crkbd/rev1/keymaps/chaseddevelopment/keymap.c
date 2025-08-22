@@ -80,12 +80,20 @@ enum custom_keycodes {
     KC_ADJUST,
     KC_D_MUTE,
     KC_GRV_INV,
-    OS_TOG
+    OS_TOG,
+    CTL_WIN
 };
 
 // Tap-Hold keys
 #define CTL_ESC MT(MOD_LCTL, KC_ESC)  // Tap for Esc, Hold for Ctrl (Windows/Linux)
 #define OPT_ESC MT(MOD_LALT, KC_ESC)  // Tap for Esc, Hold for Option/Alt (macOS)
+#define CTL_GUI MT(MOD_LGUI, KC_LCTL) // Tap for Ctrl, Hold for GUI/Meta (legacy)
+
+// State for custom Ctrl/Win dual-role key
+static bool ctrl_win_down = false;
+static bool ctrl_win_sent_ctrl = false;
+static bool ctrl_win_sent_gui = false;
+static uint16_t ctrl_win_timer = 0;
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*
@@ -104,7 +112,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_BSPC,
   CTL_ESC,  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN,  KC_QUOT,
   KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  KC_RSFT,
-                              KC_LCTL, KC_LOWER, KC_ENT,      KC_SPC, KC_RAISE, KC_RCTL
+                              CTL_WIN, KC_LOWER, KC_ENT,      KC_SPC, KC_RAISE, KC_RCTL
 ),
 /* LOWER
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -145,18 +153,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | Tab  |   Q  |   W  |   E  |   R  |   T  |                    |   Y  |   U  |   I  |   O  |   P  | Bspc |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Ctrl |   A  |   S  |   D  |   F  |   G  |                    |   H  |   J  |   K  |   L  |   ;  |  '   |
+ * | Esc |   A  |   S  |   D  |   F  |   G  |                    |   H  |   J  |   K  |   L  |   ;  |  '   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |LShift|   Z  |   X  |   C  |   V  |   B  |                    |   N  |   M  |   ,  |   .  |   /  |RShift|
  * `-----------------------------------+------+------+------+------+------+-----------------------------------'
- *                                     | Alt  | Space| Enter|      | Space| RAISE|GAMING|
+ *                                     | Ctrl  | Space| Enter|      | Space| RAISE|GAMING|
  *                                     `--------------------'      `--------------------'
  */
 [_GAMING] = LAYOUT_split_3x6_3(
   KC_TAB,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_BSPC,
-  KC_LCTL,  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN,  KC_QUOT,
-  KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  KC_RSFT,
-                              KC_LALT, KC_SPC,  KC_ENT,      KC_SPC, KC_RAISE, TG(_GAMING)
+  KC_ESC,  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN,  KC_QUOT,
+  KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  TG(_GAMING),
+                                KC_LCTL, KC_SPC,  KC_ENT,      KC_SPC, KC_RAISE, KC_ESC
 ),
 
 /* QWERTY_MAC - macOS layout
@@ -250,7 +258,34 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     static bool lower_pressed = false;
     static bool raise_pressed = false;
     
+    // If CTL_WIN is being held and another key is pressed before long-hold threshold,
+    // turn it into a Ctrl modifier for chording (copy/paste, etc.)
+    if (record->event.pressed && ctrl_win_down && !ctrl_win_sent_gui && !ctrl_win_sent_ctrl && keycode != CTL_WIN) {
+        register_code(KC_LCTL);
+        ctrl_win_sent_ctrl = true;
+        send_keyboard_report();
+    }
+
     switch (keycode) {
+        case CTL_WIN: {
+            if (record->event.pressed) {
+                ctrl_win_down = true;
+                ctrl_win_sent_ctrl = false;
+                ctrl_win_sent_gui = false;
+                ctrl_win_timer = timer_read();
+            } else {
+                // On release: if GUI was sent, unregister; if Ctrl was sent, unregister
+                if (ctrl_win_sent_gui) {
+                    unregister_code(KC_LGUI);
+                }
+                if (ctrl_win_sent_ctrl) {
+                    unregister_code(KC_LCTL);
+                }
+                ctrl_win_down = false;
+            }
+            chased_oled_on_ctrl(record->event.pressed);
+            return false;
+        }
         case KC_LOWER:
             if (record->event.pressed) {
                 lower_pressed = true;
@@ -334,6 +369,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         case KC_LCTL:
+        case CTL_GUI:
         case KC_RCTL:
             chased_oled_on_ctrl(record->event.pressed);
             break;
@@ -379,6 +415,20 @@ void matrix_scan_user(void) {
     } else {
         shift_stuck_since = 0;
     }
+
+    // Custom Ctrl/Win dual-role: during hold, after threshold, send GUI; on quick tap/hold chord, send Ctrl
+    if (ctrl_win_down) {
+        uint16_t elapsed = timer_elapsed(ctrl_win_timer);
+        // If already sent GUI or CTRL, nothing to do until release
+        if (!ctrl_win_sent_gui && !ctrl_win_sent_ctrl) {
+            if (elapsed > 300) {
+                // Long hold: send GUI
+                register_code(KC_LGUI);
+                ctrl_win_sent_gui = true;
+                send_keyboard_report();
+            }
+        }
+    }
 }
 
 bool led_update_user(led_t led_state) {
@@ -394,4 +444,13 @@ bool led_update_user(led_t led_state) {
         caps_seen_on = false;
     }
     return true;
+}
+
+uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case CTL_WIN:
+            return 300; // longer hold required for Meta
+        default:
+            return TAPPING_TERM;
+    }
 }

@@ -39,6 +39,7 @@
     #undef TAPPING_TERM
     #define TAPPING_TERM 200
 #endif
+#define TAPPING_TERM_PER_KEY
 
 // RGB Matrix configuration (Corne rev1-style: 54 LEDs total, 27 per side)
 #ifdef RGB_MATRIX_ENABLE
