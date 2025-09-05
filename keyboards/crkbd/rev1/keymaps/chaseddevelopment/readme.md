@@ -1,83 +1,52 @@
-# Corne Keyboard - ChaseD Development Layout
+# chaseddevelopment keymap for crkbd/rev1
 
-Custom Corne (CRKBD) keymap adapted from Sofle RGB firmware, maintaining key features while optimized for the 42-key layout.
+Authoritative Corne (crkbd rev1) keymap matching your ZMK semantics with QMK features.
 
-## Features
+Build (RP2040 converter, .uf2):
 
-### 🎨 RGB Matrix Lighting
-- **Layer-based RGB indication**: Different colors for each layer (Red/Cyan/Blue/Purple)
-- **Per-key RGB lighting**: Outer columns and thumb clusters illuminate to show active layer
-- **Customizable patterns**: Easily modify colors and patterns in the keymap
+`qmk compile -kb crkbd/rev1 -km chaseddevelopment -e CONVERT_TO=rp2040_ce`
 
-### 🖥️ OLED Displays
-- **Luna Pet Animation**: Beloved pixel pet that responds to typing speed and modifier keys
-  - Sits when idle
-  - Walks with slow typing
-  - Runs with fast typing  
-  - Sneaks when Ctrl is held
-  - Jumps when Space is pressed
-- **Layer Status**: Real-time display of current layer and keyboard mode
-- **WPM Counter**: Words per minute tracking with live display
+Flash: Put RP2040 into BOOTSEL (RPI-RP2), copy the generated `.uf2`. For splits: flash both halves.
 
-### ⌨️ Layout Design
+Layer diagrams (aligned)
 
-**Base Layer (QWERTY)**
+Base (QWERTY, HRMs)
 ```
-Tab  Q  W  E  R  T        Y  U  I  O  P  Bspc
-Esc  A  S  D  F  G        H  J  K  L  ;  '
-Shift Z X  C  V  B        N  M  ,  .  /  Shift
-       Gui Lower Enter    Space Raise Alt
+[Tab ] [ Q  ] [ W  ] [ E  ] [ R  ] [ T  ]    [ Y  ] [ U  ] [ I  ] [ O  ] [ P  ] [Bspc]
+[Esc ] [ A  ] [ S  ] [ D  ] [ F  ] [ G  ]    [ H  ] [ J  ] [ K  ] [ L  ] [ ;  ] [ '  ]
+[LShf] [ Z  ] [ X  ] [ C  ] [ V  ] [ B  ]    [ N  ] [ M  ] [ ,  ] [ .  ] [ /  ] [RShf]
+                 [LGUI] [LWR ] [ENT ]    [SPC ] [RSE ] [RAlt]
+```
+Home‑row mods: A=GUI, S=ALT, D=SHIFT, F=CTRL; J=CTRL, K=SHIFT, L=ALT, ;=GUI.
+
+Lower (ZMK‑style numbers + arrows)
+```
+[Tab ] [ 1  ] [ 2  ] [ 3  ] [ 4  ] [ 5  ]    [ 6  ] [ 7  ] [ 8  ] [ 9  ] [ 0  ] [Bspc]
+[____] [____] [____] [____] [____] [____]    [Left] [Down] [ Up ] [Rgt ] [____] [____]
+[LShf] [____] [____] [____] [____] [____]    [____] [____] [____] [____] [____] [____]
+                 [LGUI] [____] [ENT ]    [SPC ] [____] [RAlt]
 ```
 
-**Lower Layer (Numbers & Navigation)**
-- Numbers 1-0 on top row
-- Function keys F1-F10 
-- Arrow keys and navigation (Home/End/PgUp/PgDn)
-- Bracket keys
-
-**Raise Layer (Symbols & Functions)**
-- Symbols (!@#$%^&*())
-- Editing functions (Copy/Cut/Paste/Undo)
-- Additional brackets and special characters
-- Gaming mode toggle
-
-**Gaming Layer**
-- Standard QWERTY layout
-- Optimized for gaming with Space on left thumb
-- Gaming mode toggle to return to normal layers
-
-## Key Adaptations from Sofle RGB
-
-### Layout Changes
-- **Condensed from 60 to 42 keys**: Removed number row, consolidated function keys
-- **Smart layer design**: Numbers moved to Lower layer, symbols optimized in Raise layer
-- **Thumb cluster optimization**: Efficient use of Corne's 3-key thumb clusters
-
-### RGB System Migration
-- **RGBLIGHT → RGB_MATRIX**: Converted from underglow strips to per-key matrix
-- **Pattern adaptation**: Maintained color-coded layer system with new LED positions
-- **Performance optimization**: Disabled unused animations to save memory
-
-### OLED Optimization
-- **Luna pet preserved**: Complete animation system adapted for Corne displays
-- **Layout adjustments**: Optimized for Corne's OLED positioning and rotation
-
-## Building & Flashing
-
-### For Pro Micro footprint Corne (rev1-style) + RP2040-CE (Recommended)
-```bash
-# Compile the firmware using RP2040-CE conversion
-qmk compile -kb crkbd/rev1 -km chaseddevelopment -e CONVERT_TO=rp2040_ce
-
-# Flash to keyboard  
-qmk flash -kb crkbd/rev1 -km chaseddevelopment -e CONVERT_TO=rp2040_ce
+Raise (symbols + Game toggle, ZMK layout)
+```
+[ BT ] [ !  ] [ @  ] [ #  ] [ $  ] [ %  ]    [ ^  ] [ &  ] [ *  ] [ (  ] [ )  ] [Bspc]
+[Ctrl] [extP] [rgb0] [____] [____] [____]    [ =  ] [ -  ] [ [  ] [ ]  ] [ \  ] [ `  ]
+[LShf] [RGBT] [BRI+] [BRI-] [____] [____]    [ _  ] [ +  ] [ {  ] [ }  ] [ |  ] [ ~  ]
+                 [LGUI] [GAME] [ENT ]    [SPC ] [____] [RAlt]
 ```
 
-### Hardware Compatibility
-- **rev1-style (Pro Micro footprint)**: 54 LEDs (27 per side). Use `-e CONVERT_TO=rp2040_ce` for RP2040-CE
-- **rev4_0/rev4_1**: Newer RP2040 Corne v4 (46 LEDs - requires different LED configuration)
+Gaming (ZMK left active; right blank; right mid thumb exits)
+```
+[Esc ] [ Q  ] [ W  ] [ E  ] [ R  ] [ T  ]    [____] [____] [____] [____] [____] [____]
+[Ctrl] [ A  ] [ S  ] [ D  ] [ F  ] [ G  ]    [____] [____] [____] [____] [____] [____]
+[LShf] [ Z  ] [ X  ] [ C  ] [ V  ] [ B  ]    [____] [____] [____] [____] [____] [____]
+                 [LAlt] [SPC ] [LCTL]    [____] [EXIT] [____]
+```
 
-## Customization
+Notes
+- Toggle Gaming from Raise left thumb middle (GAME). Exit from Gaming right thumb middle.
+- OLED turns off on idle. RGB stays on.
+- Per‑layer RGB: Base swirl; Lower teal single‑color sweep; Raise magenta single‑color sweep; Gaming raindrops + WASD red.
 
 ### Changing RGB Colors
 Edit the `rgb_matrix_layer_colors` array in keymap.c:

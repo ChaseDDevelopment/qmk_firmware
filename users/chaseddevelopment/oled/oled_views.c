@@ -50,27 +50,13 @@ static void render_master_mods_view(void) {
     chased_render_caps_dot_if_any(CHASED_OLED_ROWS - 1);
 }
 
-static bool s_rgb_dimmed = false;
-
 void chased_oled_task_master(void) {
     // Honor OLED timeout on master explicitly, and sync RGB Matrix state
     #if OLED_TIMEOUT > 0
     if (last_input_activity_elapsed() > OLED_TIMEOUT && last_led_activity_elapsed() > OLED_TIMEOUT) {
-        #ifdef RGB_MATRIX_ENABLE
-        if (!s_rgb_dimmed) {
-            rgb_matrix_disable_noeeprom();
-            s_rgb_dimmed = true;
-        }
-        #endif
         oled_off();
         return;
     } else {
-        #ifdef RGB_MATRIX_ENABLE
-        if (s_rgb_dimmed) {
-            rgb_matrix_enable_noeeprom();
-            s_rgb_dimmed = false;
-        }
-        #endif
         oled_on();
     }
     #endif
@@ -83,21 +69,9 @@ void chased_oled_task_slave(void) {
     // Honor OLED timeout on slave explicitly, and sync RGB Matrix state
     #if OLED_TIMEOUT > 0
     if (last_input_activity_elapsed() > OLED_TIMEOUT && last_led_activity_elapsed() > OLED_TIMEOUT) {
-        #ifdef RGB_MATRIX_ENABLE
-        if (!s_rgb_dimmed) {
-            rgb_matrix_disable_noeeprom();
-            s_rgb_dimmed = true;
-        }
-        #endif
         oled_off();
         return;
     } else {
-        #ifdef RGB_MATRIX_ENABLE
-        if (s_rgb_dimmed) {
-            rgb_matrix_enable_noeeprom();
-            s_rgb_dimmed = false;
-        }
-        #endif
         oled_on();
     }
     #endif
@@ -123,5 +97,4 @@ void chased_oled_on_space(bool pressed) { s_pet_jump = pressed; }
 
 bool chased_pet_is_sneaking(void) { return s_pet_sneak; }
 bool chased_pet_is_jumping(void)  { return s_pet_jump; }
-
 

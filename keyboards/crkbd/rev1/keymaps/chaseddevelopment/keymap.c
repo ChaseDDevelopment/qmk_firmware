@@ -54,18 +54,9 @@ enum crkbd_layers {
     _LOWER,
     _RAISE,
     _GAMING,
-    _QWERTY_MAC,
-    _LOWER_MAC,
-    _RAISE_MAC,
-    _ADJUST
 };
 
-enum os_modes {
-    OS_WINDOWS_LINUX,
-    OS_MACOS
-};
-
-uint8_t current_os = OS_WINDOWS_LINUX;
+// No multi-OS layers; single QWERTY base
 
 // Internal guard to allow firmware to clear Caps Lock while blocking all other sources
 static bool allow_caps_toggle_internal = false;
@@ -75,169 +66,136 @@ static bool physical_rshift_down = false;
 static uint32_t shift_stuck_since = 0;
 
 enum custom_keycodes {
-    KC_LOWER = SAFE_RANGE,
-    KC_RAISE,
-    KC_ADJUST,
-    KC_D_MUTE,
+    KC_D_MUTE = SAFE_RANGE,
     KC_GRV_INV,
-    OS_TOG,
-    CTL_WIN
+    RGB_SOFT_OFF
 };
 
-// Tap-Hold keys
-#define CTL_ESC MT(MOD_LCTL, KC_ESC)  // Tap for Esc, Hold for Ctrl (Windows/Linux)
-#define OPT_ESC MT(MOD_LALT, KC_ESC)  // Tap for Esc, Hold for Option/Alt (macOS)
-#define CTL_GUI MT(MOD_LGUI, KC_LCTL) // Tap for Ctrl, Hold for GUI/Meta (legacy)
-
-// State for custom Ctrl/Win dual-role key
-static bool ctrl_win_down = false;
-static bool ctrl_win_sent_ctrl = false;
-static bool ctrl_win_sent_gui = false;
-static uint16_t ctrl_win_timer = 0;
+// No special OS dual-role keys
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-/*
- * QWERTY (Base Layer) - Corne Layout
+/* Base (QWERTY, HRMs)
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | Tab  |   Q  |   W  |   E  |   R  |   T  |                    |   Y  |   U  |   I  |   O  |   P  | Bspc |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Esc  |   A  |   S  |   D  |   F  |   G  |                    |   H  |   J  |   K  |   L  |   ;  |  '   |
+ * | Ctrl |   A  |   S  |   D  |   F  |   G  |                    |   H  |   J  |   K  |   L  |   ;  |  '   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |LShift|   Z  |   X  |   C  |   V  |   B  |                    |   N  |   M  |   ,  |   .  |   /  |RShift|
+ * | LShf |   Z  |   X  |   C  |   V  |   B  |                    |   N  |   M  |   ,  |   .  |   /  |  Esc |
  * `-----------------------------------+------+------+------+------+------+-----------------------------------'
- *                                     | LGUI | LOWER| Enter|      | Space| RAISE| RAlt |
+ *                                     | LGUI | Lower| Enter|      | Space| Raise| RAlt |
  *                                     `--------------------'      `--------------------'
  */
 [_QWERTY] = LAYOUT_split_3x6_3(
   KC_TAB,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_BSPC,
-  CTL_ESC,  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN,  KC_QUOT,
-  KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  KC_RSFT,
-                              CTL_WIN, KC_LOWER, KC_ENT,      KC_SPC, KC_RAISE, KC_RCTL
+  KC_LCTL,  MT(MOD_LGUI, KC_A), MT(MOD_LALT, KC_S), MT(MOD_LSFT, KC_D), MT(MOD_LCTL, KC_F), KC_G, 
+            KC_H, MT(MOD_RCTL, KC_J), MT(MOD_RSFT, KC_K), MT(MOD_RALT, KC_L), MT(MOD_RGUI, KC_SCLN), KC_QUOT,
+  KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  KC_ESC,
+                             KC_LGUI, MO(_LOWER), KC_ENT,      KC_SPC, MO(_RAISE), KC_RALT
 ),
-/* LOWER
+
+/* LOWER (Numbers & Navigation)
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |  `   |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  | F12  |
+ * | Tab  |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  | Bspc |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Ctrl |  F1  |  F2  |  F3  |  F4  |  F5  |                    | Left | Down |  Up  |Right | Home | End  |
+ * |      |      |      |      |      |      |                    | Left | Down |  Up  | Right|      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Shift|  F6  |  F7  |  F8  |  F9  | F10  |                    |  {   |  }   |  [   |  ]   | PgUp | PgDn |
+ * | LShf |      |      |      |      |      |                    |      |      |      |      |      |      |
  * `-----------------------------------+------+------+------+------+------+-----------------------------------'
- *                                     | LGUI | LOWER| Enter|      | Space| RAISE| RAlt |
+ *                                     | LGUI |      | Enter|      | Space|      | RAlt |
  *                                     `--------------------'      `--------------------'
  */
 [_LOWER] = LAYOUT_split_3x6_3(
-  KC_GRV_INV,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                      KC_6,    KC_7,    KC_8,    KC_9,    KC_0,   KC_F12,
-  KC_LCTL,  KC_F1,  KC_F2,   KC_F3,   KC_F4,   KC_F5,                     KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_HOME, KC_END,
-  KC_LSFT,  KC_F6,  KC_F7,   KC_F8,   KC_F9,   KC_F10,                    KC_LCBR, KC_RCBR, KC_LBRC, KC_RBRC, KC_PGUP, KC_PGDN,
-                              KC_LALT, _______, KC_ENT,       KC_SPC, _______, KC_RGUI
+  KC_TAB,   KC_1,   KC_2,   KC_3,   KC_4,   KC_5,                     KC_6,   KC_7,   KC_8,   KC_9,   KC_0,   KC_BSPC,
+  _______,  _______,_______,_______,_______,_______,                  KC_LEFT,KC_DOWN,KC_UP,  KC_RGHT,_______,_______,
+  KC_LSFT,  _______,_______,_______,_______,_______,                  _______,_______,_______,_______,_______,_______,
+                             KC_LGUI, _______, KC_ENT,      KC_SPC, _______, KC_RALT
 ),
-/* RAISE
+
+/* RAISE (Symbols & RGB Controls)
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * | Tab  |  !   |  @   |  #   |  $   |  %   |                    |  ^   |  &   |  *   |  (   |  )   | Bspc |
+ * |      |  !  |  @  |  #  |  $  |  %  |                    |  ^  |  &  |  *  |  (  |  )  | Bspc |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Ctrl | Ins  |Pscr  | Menu |      | Caps |                    |  =   |  -   |  \   |  |   |  `   |  ~   |
+ * | Ctrl |      | rgb0|      |      |      |                    |  =  |  -  |  [  |  ]  |  \ |  `   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Shift|Undo  | Cut  | Copy |Paste |      |                    |  _   |  +   |  {   |  }   | Del  |GAMING|
+ * | LShf | RGBT | BRI+| BRI-|      |      |                    |  _  |  +  |  {  |  }  |  |  |  ~   |
  * `-----------------------------------+------+------+------+------+------+-----------------------------------'
- *                                     | LGUI | LOWER| Enter|      | Space| RAISE| RAlt |
+ *                                     | LGUI |  GAME| Enter|      | Space|      | RAlt |
  *                                     `--------------------'      `--------------------'
  */
 [_RAISE] = LAYOUT_split_3x6_3(
-  KC_TAB,   KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                   KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_BSPC,
-  KC_LCTL,  KC_INS,  KC_PSCR, KC_APP,  C(KC_A), XXXXXXX,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_HOME, KC_END,
-  KC_LSFT,  C(KC_Z), C(KC_X), C(KC_C), C(KC_V), XXXXXXX,                   KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, KC_DEL,  TG(_GAMING),
-                              KC_LALT, _______, KC_ENT,       KC_SPC, _______, KC_RGUI
+  _______, KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                  KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_BSPC,
+  KC_LCTL, _______, RGB_SOFT_OFF, _______, _______, _______,  KC_EQL,  KC_MINS, KC_LBRC, KC_RBRC, KC_BSLS, KC_GRV,
+  KC_LSFT, RGB_TOG, RGB_VAI, RGB_VAD, _______, _______, KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, KC_PIPE, KC_TILD,
+                             KC_LGUI, TG(_GAMING), KC_ENT,      KC_SPC, _______, KC_RALT
 ),
 
-/* GAMING
+/* GAMING (Left active, right disabled except exit)
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * | Tab  |   Q  |   W  |   E  |   R  |   T  |                    |   Y  |   U  |   I  |   O  |   P  | Bspc |
+ * | Esc  |   Q  |   W  |   E  |   R  |   T  |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Esc |   A  |   S  |   D  |   F  |   G  |                    |   H  |   J  |   K  |   L  |   ;  |  '   |
+ * | Ctrl |   A  |   S  |   D  |   F  |   G  |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |LShift|   Z  |   X  |   C  |   V  |   B  |                    |   N  |   M  |   ,  |   .  |   /  |RShift|
+ * | LShf |   Z  |   X  |   C  |   V  |   B  |                    |      |      |      |      |      |      |
  * `-----------------------------------+------+------+------+------+------+-----------------------------------'
- *                                     | Ctrl  | Space| Enter|      | Space| RAISE|GAMING|
+ *                                     | LAlt | Space| LCtrl|      | ____ | EXIT | ____ |
  *                                     `--------------------'      `--------------------'
  */
 [_GAMING] = LAYOUT_split_3x6_3(
-  KC_TAB,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_BSPC,
-  KC_ESC,  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN,  KC_QUOT,
-  KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  TG(_GAMING),
-                                KC_LCTL, KC_SPC,  KC_ENT,      KC_SPC, KC_RAISE, KC_ESC
+  KC_ESC,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,  KC_NO,
+  KC_LCTL,  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,  KC_NO,
+  KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,  KC_NO,
+                             KC_LALT, KC_SPC, KC_LCTL,      KC_NO, TG(_GAMING), KC_NO
 ),
-
-/* QWERTY_MAC - macOS layout
- * Same as QWERTY but with Option/Alt on Esc key and Ctrl on right thumb
- */
-[_QWERTY_MAC] = LAYOUT_split_3x6_3(
-  KC_TAB,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                     KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_BSPC,
-  OPT_ESC,  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                     KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN,  KC_QUOT,
-  KC_LSFT,  KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                     KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH,  KC_RSFT,
-                              KC_LGUI, KC_LOWER, KC_ENT,      KC_SPC, KC_RAISE, KC_RCTL
-),
-
-/* LOWER_MAC - macOS lower layer */
-[_LOWER_MAC] = LAYOUT_split_3x6_3(
-  KC_GRV,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                      KC_6,    KC_7,    KC_8,    KC_9,    KC_0,   KC_F12,
-  KC_LALT,  KC_F1,  KC_F2,   KC_F3,   KC_F4,   KC_F5,                     KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_HOME, KC_END,
-  KC_LSFT,  KC_F6,  KC_F7,   KC_F8,   KC_F9,   KC_F10,                    KC_LCBR, KC_RCBR, KC_LBRC, KC_RBRC, KC_PGUP, KC_PGDN,
-                              KC_LGUI, _______, KC_ENT,       KC_SPC, _______, KC_RCTL
-),
-
-/* RAISE_MAC - macOS raise layer with Cmd-based shortcuts */
-[_RAISE_MAC] = LAYOUT_split_3x6_3(
-  KC_TAB,   KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                   KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_BSPC,
-  KC_LALT,  KC_INS,  KC_PSCR, KC_APP,  G(KC_A), XXXXXXX,                   KC_EQL,  KC_MINS, KC_BSLS, KC_PIPE, KC_GRV,  KC_TILD,
-  KC_LSFT,  G(KC_Z), G(KC_X), G(KC_C), G(KC_V), C(S(KC_C)),                KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, KC_DEL,  C(S(KC_V)),
-                              KC_LGUI, _______, KC_ENT,       KC_SPC, _______, KC_RCTL
-),
-
-/* ADJUST - Settings layer (LOWER + RAISE) */
-[_ADJUST] = LAYOUT_split_3x6_3(
-  QK_BOOT,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                   KC_MPRV, KC_MPLY, KC_MNXT, KC_VOLD, KC_VOLU, KC_MUTE,
-  RGB_TOG,  RGB_HUI, RGB_SAI, RGB_VAI, RGB_SPI, RGB_MOD,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, OS_TOG,
-  RGB_RMOD, RGB_HUD, RGB_SAD, RGB_VAD, RGB_SPD, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-                              _______, _______, _______,       _______, _______, _______
-)
 };
 
 #ifdef RGB_MATRIX_ENABLE
-// RGB Matrix Layer Lighting - Adapted from RGBLIGHT patterns
-const uint8_t PROGMEM rgb_matrix_layer_colors[][3] = {
-    [_QWERTY] = {255, 0, 0},      // Red
-    [_LOWER]  = {0, 255, 255},    // Cyan
-    [_RAISE]  = {0, 0, 255},      // Blue  
-    [_GAMING] = {255, 0, 255}     // Purple
-};
-
+// Gaming overlay: keep dynamic effects and highlight WASD
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    uint8_t layer = get_highest_layer(layer_state);
-    if (layer > 0 && layer < sizeof(rgb_matrix_layer_colors) / sizeof(rgb_matrix_layer_colors[0])) {
-        uint8_t r = rgb_matrix_layer_colors[layer][0];
-        uint8_t g = rgb_matrix_layer_colors[layer][1]; 
-        uint8_t b = rgb_matrix_layer_colors[layer][2];
-        for (uint8_t i = led_min; i < led_max; i++) {
-            rgb_matrix_set_color(i, r, g, b);
-        }
-    } else {
-        // Base layer: solid cyan/blue
-        HSV hsv = { .h = 175, .s = 255, .v = 120 };
-        RGB rgb = hsv_to_rgb(hsv);
-        for (uint8_t i = led_min; i < led_max; i++) {
-            rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
+    if (get_highest_layer(layer_state) == _GAMING) {
+        const uint8_t coords[][2] = {
+            {0, 1}, // W
+            {1, 0}, // A
+            {1, 1}, // S
+            {1, 2}  // D
+        };
+        for (uint8_t i = 0; i < sizeof(coords) / sizeof(coords[0]); i++) {
+            uint8_t row = coords[i][0];
+            uint8_t col = coords[i][1];
+            uint8_t idx = g_led_config.matrix_co[row][col];
+            if (idx != NO_LED && idx >= led_min && idx < led_max) {
+                rgb_matrix_set_color(idx, 255, 40, 40);
+            }
         }
     }
     return false;
 }
 
-#ifdef RGB_MATRIX_ENABLE
-void keyboard_post_init_user(void) {
-    // Force solid color on boot, overriding any stored gradient in EEPROM
-    rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
-    rgb_matrix_sethsv_noeeprom(175, 255, 120);
+// Per‑layer dynamic RGB modes (swirl/rainbow)
+layer_state_t layer_state_set_user(layer_state_t state) {
+    switch (get_highest_layer(state)) {
+        case _LOWER: {
+            // Teal single-color sweep (band brightness left->right)
+            rgb_matrix_mode_noeeprom(RGB_MATRIX_BAND_VAL);
+            rgb_matrix_sethsv_noeeprom(140, 110, 200);
+            rgb_matrix_set_speed_noeeprom(200);
+        } break;
+        case _RAISE: {
+            // Magenta single-color sweep (left->right)
+            rgb_matrix_mode_noeeprom(RGB_MATRIX_BAND_VAL);
+            rgb_matrix_sethsv_noeeprom(210, 130, 200);
+            rgb_matrix_set_speed_noeeprom(160);
+        } break;
+        case _GAMING: {
+            rgb_matrix_mode_noeeprom(RGB_MATRIX_RAINDROPS);
+            rgb_matrix_set_speed_noeeprom(180);
+        } break;
+        default: {
+            // Base: default rainbow swirl
+            rgb_matrix_mode_noeeprom(RGB_MATRIX_CYCLE_SPIRAL);
+        } break;
+    }
+    return state;
 }
-#endif
 #endif
 
 #ifdef OLED_ENABLE
@@ -254,89 +212,7 @@ bool oled_task_user(void) {
 #endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    // Handle ADJUST layer activation
-    static bool lower_pressed = false;
-    static bool raise_pressed = false;
-    
-    // If CTL_WIN is being held and another key is pressed before long-hold threshold,
-    // turn it into a Ctrl modifier for chording (copy/paste, etc.)
-    if (record->event.pressed && ctrl_win_down && !ctrl_win_sent_gui && !ctrl_win_sent_ctrl && keycode != CTL_WIN) {
-        register_code(KC_LCTL);
-        ctrl_win_sent_ctrl = true;
-        send_keyboard_report();
-    }
-
     switch (keycode) {
-        case CTL_WIN: {
-            if (record->event.pressed) {
-                ctrl_win_down = true;
-                ctrl_win_sent_ctrl = false;
-                ctrl_win_sent_gui = false;
-                ctrl_win_timer = timer_read();
-            } else {
-                // On release: if GUI was sent, unregister; if Ctrl was sent, unregister
-                if (ctrl_win_sent_gui) {
-                    unregister_code(KC_LGUI);
-                }
-                if (ctrl_win_sent_ctrl) {
-                    unregister_code(KC_LCTL);
-                }
-                ctrl_win_down = false;
-            }
-            chased_oled_on_ctrl(record->event.pressed);
-            return false;
-        }
-        case KC_LOWER:
-            if (record->event.pressed) {
-                lower_pressed = true;
-                if (current_os == OS_MACOS) {
-                    layer_on(_LOWER_MAC);
-                } else {
-                    layer_on(_LOWER);
-                }
-                if (raise_pressed) {
-                    layer_on(_ADJUST);
-                }
-            } else {
-                lower_pressed = false;
-                layer_off(_LOWER);
-                layer_off(_LOWER_MAC);
-                layer_off(_ADJUST);
-            }
-            return false;
-            
-        case KC_RAISE:
-            if (record->event.pressed) {
-                raise_pressed = true;
-                if (current_os == OS_MACOS) {
-                    layer_on(_RAISE_MAC);
-                } else {
-                    layer_on(_RAISE);
-                }
-                if (lower_pressed) {
-                    layer_on(_ADJUST);
-                }
-            } else {
-                raise_pressed = false;
-                layer_off(_RAISE);
-                layer_off(_RAISE_MAC);
-                layer_off(_ADJUST);
-            }
-            return false;
-            
-        case OS_TOG:
-            if (record->event.pressed) {
-                current_os = (current_os == OS_WINDOWS_LINUX) ? OS_MACOS : OS_WINDOWS_LINUX;
-                // Clear all layers and set base layer
-                layer_clear();
-                if (current_os == OS_MACOS) {
-                    layer_on(_QWERTY_MAC);
-                } else {
-                    layer_on(_QWERTY);
-                }
-            }
-            return false;
-            
         case KC_D_MUTE:
             if (record->event.pressed) {
                 register_mods(mod_config(MOD_MEH));
@@ -369,7 +245,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         case KC_LCTL:
-        case CTL_GUI:
         case KC_RCTL:
             chased_oled_on_ctrl(record->event.pressed);
             break;
@@ -382,6 +257,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_SPC:
             chased_oled_on_space(record->event.pressed);
             break;
+        case RGB_SOFT_OFF:
+#ifdef RGB_MATRIX_ENABLE
+            if (record->event.pressed) {
+                hsv_t hsv = rgb_matrix_get_hsv();
+                rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 0);
+            }
+            return false;
+#endif
     }
     
     // Copy/paste OLED feedback removed; handled by userspace if desired
@@ -416,19 +299,7 @@ void matrix_scan_user(void) {
         shift_stuck_since = 0;
     }
 
-    // Custom Ctrl/Win dual-role: during hold, after threshold, send GUI; on quick tap/hold chord, send Ctrl
-    if (ctrl_win_down) {
-        uint16_t elapsed = timer_elapsed(ctrl_win_timer);
-        // If already sent GUI or CTRL, nothing to do until release
-        if (!ctrl_win_sent_gui && !ctrl_win_sent_ctrl) {
-            if (elapsed > 300) {
-                // Long hold: send GUI
-                register_code(KC_LGUI);
-                ctrl_win_sent_gui = true;
-                send_keyboard_report();
-            }
-        }
-    }
+    // No OS dual-role handling
 }
 
 bool led_update_user(led_t led_state) {
@@ -447,10 +318,5 @@ bool led_update_user(led_t led_state) {
 }
 
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case CTL_WIN:
-            return 300; // longer hold required for Meta
-        default:
-            return TAPPING_TERM;
-    }
+    return 225; // Match ZMK tapping-term-ms
 }

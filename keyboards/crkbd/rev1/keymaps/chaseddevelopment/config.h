@@ -33,13 +33,14 @@
 #define CUSTOM_LAYER_READ
 #define OLED_TIMEOUT 30000
 
-// Tapping configuration
-#define QUICK_TAP_TERM 0
-#ifdef TAPPING_TERM
-    #undef TAPPING_TERM
-    #define TAPPING_TERM 200
-#endif
+// Tapping configuration (home‑row mods feel similar to ZMK)
+#undef QUICK_TAP_TERM
+#define QUICK_TAP_TERM 150
+#undef TAPPING_TERM
+#define TAPPING_TERM 225
 #define TAPPING_TERM_PER_KEY
+
+#define CHORDAL_HOLD
 
 // RGB Matrix configuration (Corne rev1-style: 54 LEDs total, 27 per side)
 #ifdef RGB_MATRIX_ENABLE
@@ -52,6 +53,7 @@
     // Enable rainbow and gradient animations
     #define ENABLE_RGB_MATRIX_GRADIENT_UP_DOWN
     #define ENABLE_RGB_MATRIX_GRADIENT_LEFT_RIGHT
+    #define ENABLE_RGB_MATRIX_BAND_VAL
     #define ENABLE_RGB_MATRIX_CYCLE_ALL
     #define ENABLE_RGB_MATRIX_CYCLE_LEFT_RIGHT
     #define ENABLE_RGB_MATRIX_CYCLE_UP_DOWN
@@ -61,9 +63,9 @@
     #define ENABLE_RGB_MATRIX_RAINBOW_PINWHEELS
     #define ENABLE_RGB_MATRIX_RAINDROPS
     
-    // Default mode - Solid color tuned for Tokyo Night-esque cyan/blue
+    // Default mode (overridden per layer at runtime)
     #undef RGB_MATRIX_DEFAULT_MODE
-    #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
+    #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CYCLE_LEFT_RIGHT
     #define RGB_MATRIX_DEFAULT_HUE 175
     #define RGB_MATRIX_DEFAULT_SAT 255
     #define RGB_MATRIX_DEFAULT_VAL 120
