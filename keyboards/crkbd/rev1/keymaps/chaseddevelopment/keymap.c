@@ -190,8 +190,9 @@ layer_state_t layer_state_set_user(layer_state_t state) {
             rgb_matrix_set_speed_noeeprom(180);
         } break;
         default: {
-            // Base: default rainbow swirl
-            rgb_matrix_mode_noeeprom(RGB_MATRIX_CYCLE_SPIRAL);
+            // Base: go full rainbow "puke" with fast pinwheels
+            rgb_matrix_mode_noeeprom(RGB_MATRIX_RAINBOW_PINWHEELS);
+            rgb_matrix_set_speed_noeeprom(220);
         } break;
     }
     return state;
