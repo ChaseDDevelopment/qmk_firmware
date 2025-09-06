@@ -1,5 +1,5 @@
-MOUSEKEY_ENABLE = yes
-EXTRAKEY_ENABLE = yes
+MOUSEKEY_ENABLE = no        # Not used in keymap; saves space
+EXTRAKEY_ENABLE = no        # Consumer/media keys not required; saves space
 CONSOLE_ENABLE = no
 RGB_MATRIX_ENABLE = yes      # Use RGB Matrix (54 LEDs on rev1-style boards)
 RGBLIGHT_ENABLE = no         # Disable RGBLIGHT since we're using RGB_MATRIX

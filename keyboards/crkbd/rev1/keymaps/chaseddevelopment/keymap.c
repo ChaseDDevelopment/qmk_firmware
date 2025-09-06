@@ -26,26 +26,7 @@
 #ifdef RGB_MATRIX_ENABLE
 #define RGB_MATRIX_INDICATOR_BRIGHTNESS 30
 
-// Helper macros for RGB Matrix (adapted from RGBLIGHT patterns)
-#define SET_RGB_INDICATORS(r, g, b) \
-    {0, 1, r, g, b}, \
-    {21, 1, r, g, b}
-
-#define SET_RGB_OUTER_COL(r, g, b) \
-    {5, 1, r, g, b}, {11, 1, r, g, b}, {17, 1, r, g, b}, \
-    {26, 1, r, g, b}, {32, 1, r, g, b}, {38, 1, r, g, b}
-
-#define SET_RGB_INNER_COL(r, g, b) \
-    {4, 1, r, g, b}, {10, 1, r, g, b}, {16, 1, r, g, b}, \
-    {25, 1, r, g, b}, {31, 1, r, g, b}, {37, 1, r, g, b}
-
-#define SET_RGB_THUMB_CLUSTER(r, g, b) \
-    {18, 3, r, g, b}, \
-    {39, 3, r, g, b}
-
-#define SET_RGB_NUMBER_ROW(r, g, b) \
-    {0, 6, r, g, b}, \
-    {21, 6, r, g, b}
+// (Removed unused RGB Matrix helper macros)
 #endif
 
 enum crkbd_layers {
@@ -66,9 +47,7 @@ static bool physical_rshift_down = false;
 static uint32_t shift_stuck_since = 0;
 
 enum custom_keycodes {
-    KC_D_MUTE = SAFE_RANGE,
-    KC_GRV_INV,
-    RGB_SOFT_OFF
+    RGB_SOFT_OFF = SAFE_RANGE
 };
 
 // No special OS dual-role keys
@@ -149,10 +128,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 #ifdef RGB_MATRIX_ENABLE
+// Restore per-layer lighting so each layer has a distinct look in firmware.
+// You can use VIA to experiment on a given layer, then we can bake those
+// choices below. VIA changes will be overridden on layer change.
+
 // Gaming overlay: keep base muted and highlight WASD as a static accent
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     if (get_highest_layer(layer_state) == _GAMING) {
-        // WASD on the left half: rows 0/1, cols shifted one to the right
         const uint8_t coords[][2] = {
             {0, 2}, // W (row 0, col 2)
             {1, 1}, // A (row 1, col 1)
@@ -164,7 +146,6 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             uint8_t col = coords[i][1];
             uint8_t idx = g_led_config.matrix_co[row][col];
             if (idx != NO_LED && idx >= led_min && idx < led_max) {
-                // WASD accent: static red (brightness capped by global max)
                 rgb_matrix_set_color(idx, 255, 0, 0);
             }
         }
@@ -172,57 +153,38 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     return false;
 }
 
-// Per‑layer dynamic RGB modes (swirl/rainbow)
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
         case _LOWER: {
-            // Lower: static cyan, reduced brightness (muted)
+            // Lower: static cyan, reduced brightness
             rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
             rgb_matrix_sethsv_noeeprom(HSV_CYAN);
-            {
-                hsv_t hsv = rgb_matrix_get_hsv();
-                rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 80);
-            }
+            hsv_t hsv = rgb_matrix_get_hsv();
+            rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 80);
         } break;
         case _RAISE: {
-            // Raise: static purple, reduced brightness (muted)
+            // Raise: static purple, reduced brightness
             rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
             rgb_matrix_sethsv_noeeprom(HSV_PURPLE);
-            {
-                hsv_t hsv = rgb_matrix_get_hsv();
-                rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 80);
-            }
+            hsv_t hsv = rgb_matrix_get_hsv();
+            rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 80);
         } break;
         case _GAMING: {
-            // Gaming: static gold base (muted), WASD painted red in indicators
+            // Gaming: static gold base (muted); WASD painted red in indicators
             rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
             rgb_matrix_sethsv_noeeprom(HSV_GOLD);
-            {
-                // Lower value to mute the base while keeping hue
-                hsv_t hsv = rgb_matrix_get_hsv();
-                rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 60);
-            }
+            hsv_t hsv = rgb_matrix_get_hsv();
+            rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 60);
         } break;
         default: {
-            // Base: rainbow "puke" but slower (less rave)
+            // Base: rainbow pinwheels, slightly dimmed, slower speed
             rgb_matrix_mode_noeeprom(RGB_MATRIX_RAINBOW_PINWHEELS);
             hsv_t hsv = rgb_matrix_get_hsv();
-            // Dim overall value to reduce brightness globally
             rgb_matrix_sethsv_noeeprom(hsv.h, 255, 80);
             rgb_matrix_set_speed_noeeprom(120);
         } break;
     }
     return state;
-}
-
-// Force full-bright, full-saturation rainbow as soon as the keyboard boots,
-// regardless of any persisted EEPROM settings.
-void keyboard_post_init_user(void) {
-    rgb_matrix_enable_noeeprom();
-    rgb_matrix_mode_noeeprom(RGB_MATRIX_RAINBOW_PINWHEELS);
-    // Lower boot brightness (value) while preserving hue
-    rgb_matrix_sethsv_noeeprom(rgb_matrix_get_hue(), 255, 80);
-    rgb_matrix_set_speed_noeeprom(120);
 }
 #endif
 
@@ -238,6 +200,7 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     }
 }
 
+#if 1 // legacy spaceship assets enabled for right OLED
 unsigned int state = 0;
 
 static const char PROGMEM space_row_1[] = {
@@ -482,10 +445,13 @@ static void render_space(void) {
 
 // Modify the oled_task_user function
 
+#endif /* end legacy spaceship block */
+
 bool oled_task_user(void) {
     if (is_keyboard_master()) {
         chased_oled_task_master();
     } else {
+        // Use legacy spaceship on the right OLED for consistency
         render_space();
     }
     return false;
@@ -494,37 +460,12 @@ bool oled_task_user(void) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
-        case KC_D_MUTE:
-            if (record->event.pressed) {
-                register_mods(mod_config(MOD_MEH));
-                register_code(KC_UP);
-            } else {
-                unregister_mods(mod_config(MOD_MEH));
-                unregister_code(KC_UP);
-            }
-            break;
         case KC_CAPS:
             // Block Caps from any source unless explicitly allowed by firmware
             if (!allow_caps_toggle_internal) {
                 return false;
             }
             break;
-        case KC_GRV_INV:
-            if (record->event.pressed) {
-                uint8_t saved_mods = get_mods();
-                uint8_t saved_oneshot = get_oneshot_mods();
-                clear_oneshot_mods();
-                del_mods(MOD_MASK_SHIFT);
-                if ((saved_mods | saved_oneshot) & MOD_MASK_SHIFT) {
-                    tap_code(KC_GRV); // backtick when Shift was held/oneshot
-                } else {
-                    tap_code16(S(KC_GRV)); // tilde when no Shift
-                }
-                set_mods(saved_mods);
-                set_oneshot_mods(saved_oneshot);
-                send_keyboard_report();
-            }
-            return false;
         case KC_LCTL:
         case KC_RCTL:
             chased_oled_on_ctrl(record->event.pressed);
@@ -601,3 +542,58 @@ bool led_update_user(led_t led_state) {
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     return 225; // Match ZMK tapping-term-ms
 }
+
+#ifdef VIA_ENABLE
+// Gracefully respond to VIA lighting queries for unsupported channels
+void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
+    (void)length;
+    uint8_t *command_id = &data[0];
+    uint8_t *channel_id = &data[1];
+
+#ifndef BACKLIGHT_ENABLE
+    if (*channel_id == id_qmk_backlight_channel) {
+        if (*command_id == id_custom_get_value) {
+            uint8_t *value_id   = &data[2];
+            uint8_t *value_data = &data[3];
+            switch (*value_id) {
+                case id_qmk_backlight_brightness:
+                case id_qmk_backlight_effect:
+                    value_data[0] = 0; // report disabled/zero
+                    break;
+                default:
+                    break;
+            }
+        }
+        // Accept set/save as no-ops
+        return;
+    }
+#endif
+
+#ifndef RGBLIGHT_ENABLE
+    if (*channel_id == id_qmk_rgblight_channel) {
+        if (*command_id == id_custom_get_value) {
+            uint8_t *value_id   = &data[2];
+            uint8_t *value_data = &data[3];
+            switch (*value_id) {
+                case id_qmk_rgblight_brightness:
+                case id_qmk_rgblight_effect:
+                case id_qmk_rgblight_effect_speed:
+                    value_data[0] = 0;
+                    break;
+                case id_qmk_rgblight_color:
+                    value_data[0] = 0; // hue
+                    value_data[1] = 0; // sat
+                    break;
+                default:
+                    break;
+            }
+        }
+        // Accept set/save as no-ops
+        return;
+    }
+#endif
+
+    // Not handled by keyboard-level custom handler
+    *command_id = id_unhandled;
+}
+#endif // VIA_ENABLE

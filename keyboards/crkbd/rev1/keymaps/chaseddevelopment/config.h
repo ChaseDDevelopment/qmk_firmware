@@ -68,9 +68,9 @@
     #    undef RGB_MATRIX_LED_COUNT
     #endif
     #define RGB_MATRIX_LED_COUNT 54            // Total LEDs (27 per side)
-    #define RGB_MATRIX_KEYPRESSES              // reacts to keypresses
+    #define RGB_MATRIX_KEYPRESSES              // enable reactive effects
+    #define RGB_MATRIX_FRAMEBUFFER_EFFECTS     // enable heatmap/digital rain
     #define RGB_MATRIX_SLEEP                   // turn off effects when suspended
-    #define RGB_MATRIX_FRAMEBUFFER_EFFECTS
     // Increase maximum brightness for full-vivid startup.
     // If you see instability (USB brownouts), reduce back toward 120–140.
     #ifdef RGB_MATRIX_MAXIMUM_BRIGHTNESS
@@ -78,27 +78,62 @@
     #endif
     // Clamp overall brightness further to reduce USB power draw
     // while preserving hues/effects.
-    #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 80
-    
-    // Enable rainbow and gradient animations
+    #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 100
+
+    // Enable full set of effects
+    #define ENABLE_RGB_MATRIX_ALPHAS_MODS
     #define ENABLE_RGB_MATRIX_GRADIENT_UP_DOWN
     #define ENABLE_RGB_MATRIX_GRADIENT_LEFT_RIGHT
+    #define ENABLE_RGB_MATRIX_BREATHING
+    #define ENABLE_RGB_MATRIX_BAND_SAT
     #define ENABLE_RGB_MATRIX_BAND_VAL
+    #define ENABLE_RGB_MATRIX_BAND_PINWHEEL_SAT
+    #define ENABLE_RGB_MATRIX_BAND_PINWHEEL_VAL
+    #define ENABLE_RGB_MATRIX_BAND_SPIRAL_SAT
+    #define ENABLE_RGB_MATRIX_BAND_SPIRAL_VAL
     #define ENABLE_RGB_MATRIX_CYCLE_ALL
     #define ENABLE_RGB_MATRIX_CYCLE_LEFT_RIGHT
     #define ENABLE_RGB_MATRIX_CYCLE_UP_DOWN
     #define ENABLE_RGB_MATRIX_RAINBOW_MOVING_CHEVRON
+    #define ENABLE_RGB_MATRIX_CYCLE_OUT_IN
+    #define ENABLE_RGB_MATRIX_CYCLE_OUT_IN_DUAL
+    #define ENABLE_RGB_MATRIX_CYCLE_PINWHEEL
     #define ENABLE_RGB_MATRIX_CYCLE_SPIRAL
+    #define ENABLE_RGB_MATRIX_DUAL_BEACON
     #define ENABLE_RGB_MATRIX_RAINBOW_BEACON
     #define ENABLE_RGB_MATRIX_RAINBOW_PINWHEELS
+    #define ENABLE_RGB_MATRIX_FLOWER_BLOOMING
     #define ENABLE_RGB_MATRIX_RAINDROPS
-    // Waves
+    #define ENABLE_RGB_MATRIX_JELLYBEAN_RAINDROPS
+    #define ENABLE_RGB_MATRIX_HUE_BREATHING
+    #define ENABLE_RGB_MATRIX_HUE_PENDULUM
     #define ENABLE_RGB_MATRIX_HUE_WAVE
-    #define ENABLE_RGB_MATRIX_CYCLE_OUT_IN_DUAL
+    #define ENABLE_RGB_MATRIX_PIXEL_FRACTAL
+    #define ENABLE_RGB_MATRIX_PIXEL_FLOW
+    #define ENABLE_RGB_MATRIX_PIXEL_RAIN
+    #define ENABLE_RGB_MATRIX_STARLIGHT
+    #define ENABLE_RGB_MATRIX_STARLIGHT_SMOOTH
+    #define ENABLE_RGB_MATRIX_STARLIGHT_DUAL_HUE
+    #define ENABLE_RGB_MATRIX_STARLIGHT_DUAL_SAT
+    #define ENABLE_RGB_MATRIX_RIVERFLOW
+    #define ENABLE_RGB_MATRIX_TYPING_HEATMAP
+    #define ENABLE_RGB_MATRIX_DIGITAL_RAIN
+    #define ENABLE_RGB_MATRIX_SOLID_REACTIVE_SIMPLE
+    #define ENABLE_RGB_MATRIX_SOLID_REACTIVE
+    #define ENABLE_RGB_MATRIX_SOLID_REACTIVE_WIDE
+    #define ENABLE_RGB_MATRIX_SOLID_REACTIVE_MULTIWIDE
+    #define ENABLE_RGB_MATRIX_SOLID_REACTIVE_CROSS
+    #define ENABLE_RGB_MATRIX_SOLID_REACTIVE_MULTICROSS
+    #define ENABLE_RGB_MATRIX_SOLID_REACTIVE_NEXUS
+    #define ENABLE_RGB_MATRIX_SOLID_REACTIVE_MULTINEXUS
+    #define ENABLE_RGB_MATRIX_SPLASH
+    #define ENABLE_RGB_MATRIX_MULTISPLASH
+    #define ENABLE_RGB_MATRIX_SOLID_SPLASH
+    #define ENABLE_RGB_MATRIX_SOLID_MULTISPLASH
     
     // Default mode (overridden per layer at runtime)
     #undef RGB_MATRIX_DEFAULT_MODE
-    #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CYCLE_LEFT_RIGHT
+    #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_RAINBOW_PINWHEELS
     #define RGB_MATRIX_DEFAULT_HUE 175
     #define RGB_MATRIX_DEFAULT_SAT 255
     // Raise default value (brightness) for richer colors on rainbow effects
@@ -114,27 +149,9 @@
     #define RGB_MATRIX_VAL_STEP 8
     #define RGB_MATRIX_SPD_STEP 10
     
-    // Disable some animations to save space
-    #undef ENABLE_RGB_MATRIX_ALPHAS_MODS
-    #undef ENABLE_RGB_MATRIX_BREATHING
-    #undef ENABLE_RGB_MATRIX_CYCLE_OUT_IN
-    /* leave dual out/in enabled for wavey layer */
-    #undef ENABLE_RGB_MATRIX_DUAL_BEACON
-    #undef ENABLE_RGB_MATRIX_JELLYBEAN_RAINDROPS
-    #undef ENABLE_RGB_MATRIX_TYPING_HEATMAP
-    #undef ENABLE_RGB_MATRIX_DIGITAL_RAIN
-    #undef ENABLE_RGB_MATRIX_SOLID_REACTIVE
-    #undef ENABLE_RGB_MATRIX_SOLID_REACTIVE_SIMPLE
-    #undef ENABLE_RGB_MATRIX_SOLID_REACTIVE_WIDE
-    #undef ENABLE_RGB_MATRIX_SOLID_REACTIVE_MULTIWIDE
-    #undef ENABLE_RGB_MATRIX_SOLID_REACTIVE_CROSS
-    #undef ENABLE_RGB_MATRIX_SOLID_REACTIVE_MULTICROSS
-    #undef ENABLE_RGB_MATRIX_SOLID_REACTIVE_NEXUS
-    #undef ENABLE_RGB_MATRIX_SOLID_REACTIVE_MULTINEXUS
-    #undef ENABLE_RGB_MATRIX_SPLASH
-    #undef ENABLE_RGB_MATRIX_MULTISPLASH
-    #undef ENABLE_RGB_MATRIX_SOLID_SPLASH
-    #undef ENABLE_RGB_MATRIX_SOLID_MULTISPLASH
+    // Performance: throttle LED processing & flush rate
+    #define RGB_MATRIX_LED_PROCESS_LIMIT (RGB_MATRIX_LED_COUNT + 4) / 5
+    #define RGB_MATRIX_LED_FLUSH_LIMIT 16
 #endif
 
 // Encoder support (if using encoder-enabled Corne)
@@ -146,3 +163,11 @@
 #define SPLIT_LAYER_STATE_ENABLE               // Sync layer state between halves
 #define SPLIT_LED_STATE_ENABLE                 // Sync LED state between halves
 #define SPLIT_MODS_ENABLE                      // Sync modifiers between halves
+
+// Trim debug/print code from firmware
+#ifndef NO_DEBUG
+#define NO_DEBUG
+#endif
+#ifndef NO_PRINT
+#define NO_PRINT
+#endif
