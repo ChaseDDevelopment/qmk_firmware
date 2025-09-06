@@ -10,6 +10,7 @@ This userspace provides a reusable OLED UI for 128x32 (and 128x64) displays.
 - `users/chaseddevelopment/oled/oled.h`: public API and small wrappers
 - `users/chaseddevelopment/oled/oled_views.c`: master/slave rendering logic
 - `users/chaseddevelopment/oled/oled_sprites.c`: layer/mod glyphs, Luna sprites, WPM bar, badges
+- `users/chaseddevelopment/oled/spaceship_view.c`: optional right-side full-screen spaceship WPM view
 - `users/chaseddevelopment/oled/fonts/glcdfont.c`: classic 5x7 font bytes
 - `users/chaseddevelopment/rules.mk`: userspace build rules
 
@@ -37,6 +38,7 @@ USER_NAME := chaseddevelopment
 // #define CHASED_OLED_PET_ON_SLAVE 1              // show Luna on slave
 // #define CHASED_OLED_VIEW_SWAP_INTERVAL_MS 2500  // master view cycle
 // #define CHASED_OLED_GAMEPAD_BADGE               // enable gaming badge
+// #define CHASED_OLED_RIGHT_SPACESHIP             // enable spaceship WPM on right OLED
 ```
 
 3) `keymaps/<board>/keymap.c`
@@ -74,8 +76,11 @@ bool chased_is_game_layer_active(void) {
 
 ## Notes
 - 128x32 writes are fully guarded (no page > 3).
+- On 128x32, the master composes Luna on the left with layers + condensed mod clusters to the right.
 - After delegating to userspace, you can remove old OLED helpers/assets from your keymap to save flash.
 - Extend `glcdfont.c` if you want custom glyphs.
+
+
 
 
 

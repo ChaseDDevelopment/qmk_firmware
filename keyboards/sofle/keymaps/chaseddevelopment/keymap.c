@@ -678,16 +678,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_RCTL:
             if (record->event.pressed) {
                 isSneaking = true;
+                chased_oled_on_ctrl(true);
             } else {
                 isSneaking = false;
+                chased_oled_on_ctrl(false);
             }
             break;
         case KC_SPC:
             if (record->event.pressed) {
                 isJumping = true;
                 showedJump = false;  // Reset jump display
+                chased_oled_on_space(true);
             } else {
                 isJumping = false;
+                chased_oled_on_space(false);
             }
             break;
 

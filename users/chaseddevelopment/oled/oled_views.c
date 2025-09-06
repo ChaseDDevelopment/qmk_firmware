@@ -20,8 +20,12 @@ void chased_render_mods(uint8_t modifiers);
 void chased_render_luna(uint8_t x, uint8_t y);
 void chased_update_luna_anim(void);
 void chased_render_wpm_bar_line(uint8_t line, uint8_t start_col, uint8_t width);
-void chased_render_caps_dot_if_any(uint8_t line);
 void chased_render_gamepad_badge_small(void);
+void render_mod_status_gui_alt_row1(uint8_t modifiers);
+void render_mod_status_ctrl_shift_row1(uint8_t modifiers);
+#ifdef CHASED_OLED_RIGHT_SPACESHIP
+void chased_render_spaceship_wpm_fullscreen(void);
+#endif
 
 /* view swap state removed to prevent flashing */
 
@@ -34,20 +38,19 @@ oled_rotation_t chased_oled_init(oled_rotation_t rotation) {
     return OLED_ROTATION_270;
 }
 
-static void render_master_layer_view(void) {
-    oled_set_cursor(0, 0);
-    chased_render_layer_block();
-    oled_set_cursor(0, CHASED_OLED_ROWS - 1);
-    chased_render_caps_dot_if_any(CHASED_OLED_ROWS - 1);
-}
+static void render_master_compose(void) {
+    // Left: Luna (3 rows tall)
+    chased_render_luna(0, 0);
 
-static void render_master_mods_view(void) {
+    // Right of Luna: two condensed mod rows on lines 2 and 3 to avoid any overlap/squish
+    const uint8_t status_col = 6; // ~36px over from the left
     uint8_t mods = get_mods() | get_oneshot_mods();
-    // Move mods further down to avoid overlap with the three-line layer block (OLED_ROTATION_270)
-    oled_set_cursor(0, 7);
-    chased_render_mods(mods);
-    oled_set_cursor(0, CHASED_OLED_ROWS - 1);
-    chased_render_caps_dot_if_any(CHASED_OLED_ROWS - 1);
+
+    // Keep line 0/1 clear for Luna; render condensed mod clusters on the lower two lines
+    oled_set_cursor(status_col, (CHASED_OLED_ROWS > 2) ? 2 : CHASED_OLED_ROWS - 1);
+    render_mod_status_gui_alt_row1(mods);
+    oled_set_cursor(status_col, (CHASED_OLED_ROWS > 3) ? 3 : CHASED_OLED_ROWS - 1);
+    render_mod_status_ctrl_shift_row1(mods);
 }
 
 void chased_oled_task_master(void) {
@@ -60,9 +63,9 @@ void chased_oled_task_master(void) {
         oled_on();
     }
     #endif
-    // Render both layer indicator and modifiers without view swapping to avoid flashing
-    render_master_layer_view();
-    render_master_mods_view();
+    // Compose Luna on the left, status (layers + condensed mods) on the right
+    render_master_compose();
+    chased_update_luna_anim();
 }
 
 void chased_oled_task_slave(void) {
@@ -75,18 +78,22 @@ void chased_oled_task_slave(void) {
         oled_on();
     }
     #endif
-    if (CHASED_OLED_PET_ON_SLAVE) {
-        oled_set_cursor(0, 0);
-        chased_render_luna(0, 0);
-    }
-
-    uint8_t last_line = CHASED_OLED_ROWS - 1;
-    uint8_t wpm       = (uint8_t)get_current_wpm();
-    oled_set_cursor(0, last_line);
-    oled_write_P(PSTR("W:"), false);
-    oled_write(get_u8_str(wpm, ' '), false);
-    chased_render_wpm_bar_line(last_line, 6, 24);
-    chased_update_luna_anim();
+    #ifdef CHASED_OLED_RIGHT_SPACESHIP
+        // Full-screen spaceship WPM visualization on the right
+        chased_render_spaceship_wpm_fullscreen();
+    #else
+        if (CHASED_OLED_PET_ON_SLAVE) {
+            oled_set_cursor(0, 0);
+            chased_render_luna(0, 0);
+        }
+        uint8_t last_line = CHASED_OLED_ROWS - 1;
+        uint8_t wpm       = (uint8_t)get_current_wpm();
+        oled_set_cursor(0, last_line);
+        oled_write_P(PSTR("W:"), false);
+        oled_write(get_u8_str(wpm, ' '), false);
+        chased_render_wpm_bar_line(last_line, 6, 24);
+        chased_update_luna_anim();
+    #endif
 }
 
 static bool s_pet_sneak = false;
@@ -97,4 +104,3 @@ void chased_oled_on_space(bool pressed) { s_pet_jump = pressed; }
 
 bool chased_pet_is_sneaking(void) { return s_pet_sneak; }
 bool chased_pet_is_jumping(void)  { return s_pet_jump; }
-

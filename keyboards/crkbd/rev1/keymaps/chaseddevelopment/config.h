@@ -21,6 +21,17 @@
 #    define OLED_DISPLAY_128X32
 #endif
 
+// Many 0.91" 128x32 panels on Corne use an SH1106 controller. When driven as
+// SSD1306 the output looks horizontally "squished" or duplicated. Selecting
+// the correct IC (and a small column offset) fixes that rendering.
+#ifndef OLED_IC
+#    define OLED_IC OLED_IC_SH1106
+#endif
+// SH1106 has a 132‑column RAM; shift drawing right so it’s centered.
+#ifndef OLED_COLUMN_OFFSET
+#    define OLED_COLUMN_OFFSET 2
+#endif
+
 #ifndef OLED_FONT_H
 #    define OLED_FONT_H "users/chaseddevelopment/oled/fonts/glcdfont.c"
 #endif
@@ -32,6 +43,10 @@
 // OLED configuration
 #define CUSTOM_LAYER_READ
 #define OLED_TIMEOUT 30000
+// Right-hand (slave) OLED: render the spaceship WPM scene
+// Left-hand (master) OLED: Luna + layer/mod glyphs
+#define CHASED_OLED_RIGHT_SPACESHIP
+#define SPLIT_OLED_ENABLE
 
 // Tapping configuration (home‑row mods feel similar to ZMK)
 #undef QUICK_TAP_TERM
@@ -44,11 +59,19 @@
 
 // RGB Matrix configuration (Corne rev1-style: 54 LEDs total, 27 per side)
 #ifdef RGB_MATRIX_ENABLE
+    #ifdef RGB_MATRIX_LED_COUNT
+    #    undef RGB_MATRIX_LED_COUNT
+    #endif
     #define RGB_MATRIX_LED_COUNT 54            // Total LEDs (27 per side)
     #define RGB_MATRIX_KEYPRESSES              // reacts to keypresses
     #define RGB_MATRIX_SLEEP                   // turn off effects when suspended
     #define RGB_MATRIX_FRAMEBUFFER_EFFECTS
-    #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 120  // limits maximum brightness (was 150 in Sofle)
+    // Increase maximum brightness for full-vivid startup.
+    // If you see instability (USB brownouts), reduce back toward 120–140.
+    #ifdef RGB_MATRIX_MAXIMUM_BRIGHTNESS
+    #    undef RGB_MATRIX_MAXIMUM_BRIGHTNESS
+    #endif
+    #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255
     
     // Enable rainbow and gradient animations
     #define ENABLE_RGB_MATRIX_GRADIENT_UP_DOWN
@@ -62,13 +85,20 @@
     #define ENABLE_RGB_MATRIX_RAINBOW_BEACON
     #define ENABLE_RGB_MATRIX_RAINBOW_PINWHEELS
     #define ENABLE_RGB_MATRIX_RAINDROPS
+    // Waves
+    #define ENABLE_RGB_MATRIX_HUE_WAVE
+    #define ENABLE_RGB_MATRIX_CYCLE_OUT_IN_DUAL
     
     // Default mode (overridden per layer at runtime)
     #undef RGB_MATRIX_DEFAULT_MODE
     #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CYCLE_LEFT_RIGHT
     #define RGB_MATRIX_DEFAULT_HUE 175
     #define RGB_MATRIX_DEFAULT_SAT 255
-    #define RGB_MATRIX_DEFAULT_VAL 120
+    // Raise default value (brightness) for richer colors on rainbow effects
+    #ifdef RGB_MATRIX_DEFAULT_VAL
+    #    undef RGB_MATRIX_DEFAULT_VAL
+    #endif
+    #define RGB_MATRIX_DEFAULT_VAL 255
     
     // Step sizes for RGB adjustments
     #define RGB_MATRIX_HUE_STEP 8
@@ -80,7 +110,7 @@
     #undef ENABLE_RGB_MATRIX_ALPHAS_MODS
     #undef ENABLE_RGB_MATRIX_BREATHING
     #undef ENABLE_RGB_MATRIX_CYCLE_OUT_IN
-    #undef ENABLE_RGB_MATRIX_CYCLE_OUT_IN_DUAL
+    /* leave dual out/in enabled for wavey layer */
     #undef ENABLE_RGB_MATRIX_DUAL_BEACON
     #undef ENABLE_RGB_MATRIX_JELLYBEAN_RAINDROPS
     #undef ENABLE_RGB_MATRIX_TYPING_HEATMAP

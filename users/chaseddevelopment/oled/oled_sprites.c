@@ -11,35 +11,39 @@ extern bool chased_pet_is_sneaking(void);
 extern bool chased_pet_is_jumping(void);
 
 static void write_layer_glyphs_default(void) {
-    static const char PROGMEM g[] = {
-        0x20, 0x94, 0x95, 0x96, 0x20,
-        0x20, 0xb4, 0xb5, 0xb6, 0x20,
-        0x20, 0xd4, 0xd5, 0xd6, 0x20, 0};
-    oled_write_P(g, false);
+    static const char PROGMEM row1[] = {0x20, 0x94, 0x95, 0x96, 0x20, 0};
+    static const char PROGMEM row2[] = {0x20, 0xb4, 0xb5, 0xb6, 0x20, 0};
+    static const char PROGMEM row3[] = {0x20, 0xd4, 0xd5, 0xd6, 0x20, 0};
+    oled_write_ln_P(row1, false);
+    oled_write_ln_P(row2, false);
+    oled_write_ln_P(row3, false);
 }
 
 static void write_layer_glyphs_raise(void) {
-    static const char PROGMEM g[] = {
-        0x20, 0x97, 0x98, 0x99, 0x20,
-        0x20, 0xb7, 0xb8, 0xb9, 0x20,
-        0x20, 0xd7, 0xd8, 0xd9, 0x20, 0};
-    oled_write_P(g, false);
+    static const char PROGMEM row1[] = {0x20, 0x97, 0x98, 0x99, 0x20, 0};
+    static const char PROGMEM row2[] = {0x20, 0xb7, 0xb8, 0xb9, 0x20, 0};
+    static const char PROGMEM row3[] = {0x20, 0xd7, 0xd8, 0xd9, 0x20, 0};
+    oled_write_ln_P(row1, false);
+    oled_write_ln_P(row2, false);
+    oled_write_ln_P(row3, false);
 }
 
 static void write_layer_glyphs_lower(void) {
-    static const char PROGMEM g[] = {
-        0x20, 0x9a, 0x9b, 0x9c, 0x20,
-        0x20, 0xba, 0xbb, 0xbc, 0x20,
-        0x20, 0xda, 0xdb, 0xdc, 0x20, 0};
-    oled_write_P(g, false);
+    static const char PROGMEM row1[] = {0x20, 0x9a, 0x9b, 0x9c, 0x20, 0};
+    static const char PROGMEM row2[] = {0x20, 0xba, 0xbb, 0xbc, 0x20, 0};
+    static const char PROGMEM row3[] = {0x20, 0xda, 0xdb, 0xdc, 0x20, 0};
+    oled_write_ln_P(row1, false);
+    oled_write_ln_P(row2, false);
+    oled_write_ln_P(row3, false);
 }
 
 static void write_layer_glyphs_adjust(void) {
-    static const char PROGMEM g[] = {
-        0x20, 0x9d, 0x9e, 0x9f, 0x20,
-        0x20, 0xbd, 0xbe, 0xbf, 0x20,
-        0x20, 0xdd, 0xde, 0xdf, 0x20, 0};
-    oled_write_P(g, false);
+    static const char PROGMEM row1[] = {0x20, 0x9d, 0x9e, 0x9f, 0x20, 0};
+    static const char PROGMEM row2[] = {0x20, 0xbd, 0xbe, 0xbf, 0x20, 0};
+    static const char PROGMEM row3[] = {0x20, 0xdd, 0xde, 0xdf, 0x20, 0};
+    oled_write_ln_P(row1, false);
+    oled_write_ln_P(row2, false);
+    oled_write_ln_P(row3, false);
 }
 
 void chased_render_layer_block(void) {
@@ -200,5 +204,4 @@ void chased_render_gamepad_badge_small(void) {
     (void)0;
 #endif
 }
-
 

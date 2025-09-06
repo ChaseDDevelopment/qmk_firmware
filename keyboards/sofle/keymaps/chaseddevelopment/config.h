@@ -38,6 +38,9 @@
 
 #define CUSTOM_LAYER_READ //if you remove this it causes issues - needs better guarding
 
+// Right OLED: full-screen spaceship WPM visualization
+#define CHASED_OLED_RIGHT_SPACESHIP
+
 
 #define QUICK_TAP_TERM 0
 #ifdef TAPPING_TERM
