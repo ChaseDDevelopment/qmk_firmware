@@ -149,7 +149,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 #ifdef RGB_MATRIX_ENABLE
-// Gaming overlay: keep dynamic effects and highlight WASD
+// Gaming overlay: keep base muted and highlight WASD as a static accent
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     if (get_highest_layer(layer_state) == _GAMING) {
         // WASD on the left half: rows 0/1, cols shifted one to the right
@@ -164,7 +164,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             uint8_t col = coords[i][1];
             uint8_t idx = g_led_config.matrix_co[row][col];
             if (idx != NO_LED && idx >= led_min && idx < led_max) {
-                // WASD accent: bright red
+                // WASD accent: static red (brightness capped by global max)
                 rgb_matrix_set_color(idx, 255, 0, 0);
             }
         }
@@ -176,25 +176,39 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
         case _LOWER: {
-            // Lower: static cyan at full saturation/brightness
+            // Lower: static cyan, reduced brightness (muted)
             rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
             rgb_matrix_sethsv_noeeprom(HSV_CYAN);
+            {
+                hsv_t hsv = rgb_matrix_get_hsv();
+                rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 80);
+            }
         } break;
         case _RAISE: {
-            // Raise: static purple at full saturation/brightness
+            // Raise: static purple, reduced brightness (muted)
             rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
             rgb_matrix_sethsv_noeeprom(HSV_PURPLE);
+            {
+                hsv_t hsv = rgb_matrix_get_hsv();
+                rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 80);
+            }
         } break;
         case _GAMING: {
-            // Gaming: static gold base, WASD gets painted red in indicators
+            // Gaming: static gold base (muted), WASD painted red in indicators
             rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
             rgb_matrix_sethsv_noeeprom(HSV_GOLD);
+            {
+                // Lower value to mute the base while keeping hue
+                hsv_t hsv = rgb_matrix_get_hsv();
+                rgb_matrix_sethsv_noeeprom(hsv.h, hsv.s, 60);
+            }
         } break;
         default: {
             // Base: rainbow "puke" but slower (less rave)
             rgb_matrix_mode_noeeprom(RGB_MATRIX_RAINBOW_PINWHEELS);
             hsv_t hsv = rgb_matrix_get_hsv();
-            rgb_matrix_sethsv_noeeprom(hsv.h, 255, 255);
+            // Dim overall value to reduce brightness globally
+            rgb_matrix_sethsv_noeeprom(hsv.h, 255, 80);
             rgb_matrix_set_speed_noeeprom(120);
         } break;
     }
@@ -206,7 +220,8 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 void keyboard_post_init_user(void) {
     rgb_matrix_enable_noeeprom();
     rgb_matrix_mode_noeeprom(RGB_MATRIX_RAINBOW_PINWHEELS);
-    rgb_matrix_sethsv_noeeprom(rgb_matrix_get_hue(), 255, 255);
+    // Lower boot brightness (value) while preserving hue
+    rgb_matrix_sethsv_noeeprom(rgb_matrix_get_hue(), 255, 80);
     rgb_matrix_set_speed_noeeprom(120);
 }
 #endif
