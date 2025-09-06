@@ -23,6 +23,8 @@ void chased_render_wpm_bar_line(uint8_t line, uint8_t start_col, uint8_t width);
 void chased_render_gamepad_badge_small(void);
 void render_mod_status_gui_alt_row1(uint8_t modifiers);
 void render_mod_status_ctrl_shift_row1(uint8_t modifiers);
+void render_mod_status_gui_alt(uint8_t modifiers);
+void render_mod_status_ctrl_shift(uint8_t modifiers);
 #ifdef CHASED_OLED_RIGHT_SPACESHIP
 void chased_render_spaceship_wpm_fullscreen(void);
 #endif
@@ -42,18 +44,21 @@ static void render_master_compose(void) {
     // Luna at top (y=1 for slight offset if needed)
     chased_render_luna(0, 1);
 
-    // Assume layer shift glyph is drawn within chased_render_luna or add call here if separate
-    // For now, placing mods lower to spread out
+    // Layer shift graphics at middle (y=5, below Luna)
+    oled_set_cursor(0, 5);
+    chased_render_layer_block();
 
-    const uint8_t status_col = 6;
+    // Mod glyphs at bottom (y=9, after layer block)
+    const uint8_t status_col = 0; // Start from left edge to avoid wrapping
     uint8_t mods = get_mods() | get_oneshot_mods();
-
-    // First mod cluster at middle (y=5, below Luna)
-    oled_set_cursor(status_col, 5);
-    render_mod_status_gui_alt_row1(mods);
-    // Second mod cluster at bottom (y=10)
-    oled_set_cursor(status_col, 10);
-    render_mod_status_ctrl_shift_row1(mods);
+    
+    // GUI/ALT icons at row 9-10
+    oled_set_cursor(status_col, 9);
+    render_mod_status_gui_alt(mods);
+    
+    // CTRL/SHIFT icons at row 11-12
+    oled_set_cursor(status_col, 11);
+    render_mod_status_ctrl_shift(mods);
 }
 
 void chased_oled_task_master(void) {

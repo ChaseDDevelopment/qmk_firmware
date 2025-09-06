@@ -71,7 +71,9 @@
     #ifdef RGB_MATRIX_MAXIMUM_BRIGHTNESS
     #    undef RGB_MATRIX_MAXIMUM_BRIGHTNESS
     #endif
-    #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255
+    // Clamp overall brightness to reduce USB power draw and avoid brownouts
+    // on solid-color layers while preserving hues/effects.
+    #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 140
     
     // Enable rainbow and gradient animations
     #define ENABLE_RGB_MATRIX_GRADIENT_UP_DOWN
@@ -98,6 +100,7 @@
     #ifdef RGB_MATRIX_DEFAULT_VAL
     #    undef RGB_MATRIX_DEFAULT_VAL
     #endif
+    // Leave default at full; runtime clamp above limits actual output.
     #define RGB_MATRIX_DEFAULT_VAL 255
     
     // Step sizes for RGB adjustments
