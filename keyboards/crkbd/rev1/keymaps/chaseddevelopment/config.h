@@ -36,6 +36,11 @@
 #    define OLED_FONT_H "users/chaseddevelopment/oled/fonts/glcdfont.c"
 #endif
 
+// Increase VIA dynamic layers to allow future expansion
+#ifndef DYNAMIC_KEYMAP_LAYER_COUNT
+#    define DYNAMIC_KEYMAP_LAYER_COUNT 6
+#endif
+
 // Split keyboard configuration
 #define SPLIT_WPM_ENABLE
 #define MASTER_LEFT

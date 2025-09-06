@@ -11,6 +11,9 @@ WPM_ENABLE = yes            # Enable WPM tracking for Luna animation
 USER_NAME := chaseddevelopment
 TRI_LAYER_ENABLE = no       # Not using tri-layer in this keymap
 
+# Enable VIA support (dynamic keymap over RAW HID)
+VIA_ENABLE = yes
+
 # Optimize for space - disable unused features
 MAGIC_ENABLE = no
 SPACE_CADET_ENABLE = no
