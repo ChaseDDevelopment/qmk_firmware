@@ -121,3 +121,5 @@ compile_commands.json
 via*.json
 /keyboards/**/keymaps/via/*
 /keyboards/**/keymaps/vial/*
+AGENTS.md
+.serena/**

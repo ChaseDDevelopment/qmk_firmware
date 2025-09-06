@@ -39,17 +39,20 @@ oled_rotation_t chased_oled_init(oled_rotation_t rotation) {
 }
 
 static void render_master_compose(void) {
-    // Left: Luna (3 rows tall)
-    chased_render_luna(0, 0);
+    // Luna at top (y=1 for slight offset if needed)
+    chased_render_luna(0, 1);
 
-    // Right of Luna: two condensed mod rows on lines 2 and 3 to avoid any overlap/squish
-    const uint8_t status_col = 6; // ~36px over from the left
+    // Assume layer shift glyph is drawn within chased_render_luna or add call here if separate
+    // For now, placing mods lower to spread out
+
+    const uint8_t status_col = 6;
     uint8_t mods = get_mods() | get_oneshot_mods();
 
-    // Keep line 0/1 clear for Luna; render condensed mod clusters on the lower two lines
-    oled_set_cursor(status_col, (CHASED_OLED_ROWS > 2) ? 2 : CHASED_OLED_ROWS - 1);
+    // First mod cluster at middle (y=5, below Luna)
+    oled_set_cursor(status_col, 5);
     render_mod_status_gui_alt_row1(mods);
-    oled_set_cursor(status_col, (CHASED_OLED_ROWS > 3) ? 3 : CHASED_OLED_ROWS - 1);
+    // Second mod cluster at bottom (y=10)
+    oled_set_cursor(status_col, 10);
     render_mod_status_ctrl_shift_row1(mods);
 }
 
