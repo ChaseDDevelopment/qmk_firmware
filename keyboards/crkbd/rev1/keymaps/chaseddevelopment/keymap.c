@@ -154,7 +154,17 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    switch (get_highest_layer(state)) {
+    static uint8_t s_last_layer = _QWERTY;
+    uint8_t current = get_highest_layer(state);
+    // When leaving GAMING, clear any active modifiers to avoid OS shortcuts
+    if (s_last_layer == _GAMING && current != _GAMING) {
+        clear_mods();
+        clear_oneshot_mods();
+        send_keyboard_report();
+    }
+    s_last_layer = current;
+
+    switch (current) {
         case _LOWER: {
             // Lower: static cyan, reduced brightness
             rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
