@@ -17,6 +17,7 @@
 #include <stdio.h>
 
 #include QMK_KEYBOARD_H
+#include "wait.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -158,9 +159,15 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     uint8_t current = get_highest_layer(state);
     // When leaving GAMING, clear any active modifiers to avoid OS shortcuts
     if (s_last_layer == _GAMING && current != _GAMING) {
+        // Ensure no stuck modifiers or keys remain when leaving gaming.
+        // Add a tiny delay so the host processes the toggle event first.
+        wait_ms(8);
         clear_mods();
         clear_oneshot_mods();
+        clear_weak_mods();
+        clear_keyboard();
         send_keyboard_report();
+        wait_ms(8);
     }
     s_last_layer = current;
 
